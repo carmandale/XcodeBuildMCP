@@ -19,17 +19,22 @@ Personal fork of XcodeBuildMCP for Groove Jones Apple Vision Pro development. Th
 
 **Changes:**
 - Optimized Cursor MCP configuration for AVP workflows
+- Added XcodeBuildMCP to Factory AI Droid CLI
+- Dual-mode setup (Production + Dev) in both tools
 - Enabled workflows: simulator, device, logging, project-discovery, ui-testing
 - Disabled Sentry telemetry for privacy
 - Disabled incremental builds (experimental feature)
 
 **Files Modified:**
-- `~/.cursor/mcp.json` - User configuration (not in repo)
+- `~/.cursor/mcp.json` - Cursor configuration (not in repo)
+- `~/.factory/mcp.json` - Factory AI configuration (not in repo)
 
 **Benefits:**
 - Reduced tool count from 83 to 61 (faster context)
 - Privacy-focused (no telemetry)
 - Focused on AVP development needs
+- Available in both Cursor and Factory AI Droid CLI
+- Can switch between stable (Production) and development versions
 
 ---
 
