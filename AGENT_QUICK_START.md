@@ -585,21 +585,32 @@ AI: "✅ All builds successful:
 
 Users must have XcodeBuildMCP configured in their AI client.
 
-**Typical Configuration (~/.cursor/mcp.json):**
+**Configuration Locations:**
+
+| AI Tool | Config File | Status |
+|---------|-------------|--------|
+| Claude Code | `~/.claude.json` | ✅ Using local build |
+| Cursor | `~/.cursor/mcp.json` | ✅ Using local build |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | ❌ Not installed |
+| Factory Droid | `{project}/.factory/config.toml` (per-project) | ⚠️ No configs |
+
+**For detailed configuration instructions, see:** `@MCP_CONFIG_LOCATIONS.md`
+
+**Current Configuration (using local build):**
 ```json
 {
   "XcodeBuildMCP": {
-    "command": "npx",
-    "args": ["-y", "xcodebuildmcp@latest"],
-    "env": {
-      "XCODEBUILDMCP_ENABLED_WORKFLOWS": "simulator,device,macos,logging,project-discovery,ui-testing"
-    }
+    "command": "node",
+    "args": [
+      "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/build/index.js"
+    ],
+    "env": {}
   }
 }
 ```
 
 **If user reports "command not found":**
-→ They need to configure MCP server first (see main README)
+→ They need to configure MCP server (see MCP_CONFIG_LOCATIONS.md)
 
 ---
 
