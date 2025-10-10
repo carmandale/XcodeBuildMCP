@@ -20,6 +20,11 @@ import { nullifyEmptyStrings } from '../../../utils/schema-helpers.ts';
 // Unified schema: XOR between projectPath and workspacePath, and XOR between simulatorId and simulatorName
 const baseOptions = {
   scheme: z.string().describe('The scheme to use (Required)'),
+  platform: z
+    .enum(['iOS Simulator', 'watchOS Simulator', 'tvOS Simulator', 'visionOS Simulator'])
+    .optional()
+    .default('iOS Simulator')
+    .describe('Target simulator platform (defaults to iOS Simulator)'),
   simulatorId: z
     .string()
     .optional()
@@ -89,6 +94,17 @@ async function _handleSimulatorBuildLogic(
   const projectType = params.projectPath ? 'project' : 'workspace';
   const filePath = params.projectPath ?? params.workspacePath;
 
+  // Map platform string to XcodePlatform enum
+  const platformMap: Record<string, XcodePlatform> = {
+    'iOS Simulator': XcodePlatform.iOSSimulator,
+    'watchOS Simulator': XcodePlatform.watchOSSimulator,
+    'tvOS Simulator': XcodePlatform.tvOSSimulator,
+    'visionOS Simulator': XcodePlatform.visionOSSimulator,
+  };
+
+  const platform = platformMap[params.platform ?? 'iOS Simulator'] ?? XcodePlatform.iOSSimulator;
+  const platformName = params.platform ?? 'iOS Simulator';
+
   // Log warning if useLatestOS is provided with simulatorId
   if (params.simulatorId && params.useLatestOS !== undefined) {
     log(
@@ -99,7 +115,7 @@ async function _handleSimulatorBuildLogic(
 
   log(
     'info',
-    `Starting iOS Simulator build for scheme ${params.scheme} from ${projectType}: ${filePath}`,
+    `Starting ${platformName} build for scheme ${params.scheme} from ${projectType}: ${filePath}`,
   );
 
   // Create SharedBuildParams object with required configuration property
@@ -115,11 +131,11 @@ async function _handleSimulatorBuildLogic(
   return executeXcodeBuildCommandFn(
     sharedBuildParams,
     {
-      platform: XcodePlatform.iOSSimulator,
+      platform: platform,
       simulatorId: params.simulatorId,
       simulatorName: params.simulatorName,
       useLatestOS: params.simulatorId ? false : params.useLatestOS,
-      logPrefix: 'iOS Simulator Build',
+      logPrefix: `${platformName} Build`,
     },
     params.preferXcodebuild as boolean,
     'build',
@@ -127,7 +143,7 @@ async function _handleSimulatorBuildLogic(
   );
 }
 
-// Exported business logic function for building and running iOS Simulator apps.
+// Exported business logic function for building and running Simulator apps.
 export async function build_run_simLogic(
   params: BuildRunSimulatorParams,
   executor: CommandExecutor,
@@ -135,10 +151,11 @@ export async function build_run_simLogic(
 ): Promise<ToolResponse> {
   const projectType = params.projectPath ? 'project' : 'workspace';
   const filePath = params.projectPath ?? params.workspacePath;
+  const platformName = params.platform ?? 'iOS Simulator';
 
   log(
     'info',
-    `Starting iOS Simulator build and run for scheme ${params.scheme} from ${projectType}: ${filePath}`,
+    `Starting ${platformName} build and run for scheme ${params.scheme} from ${projectType}: ${filePath}`,
   );
 
   try {
@@ -169,14 +186,15 @@ export async function build_run_simLogic(
     command.push('-configuration', params.configuration ?? 'Debug');
 
     // Handle destination for simulator
+    const platformForDestination = params.platform ?? 'iOS Simulator';
     let destinationString: string;
     if (params.simulatorId) {
-      destinationString = `platform=iOS Simulator,id=${params.simulatorId}`;
+      destinationString = `platform=${platformForDestination},id=${params.simulatorId}`;
     } else if (params.simulatorName) {
-      destinationString = `platform=iOS Simulator,name=${params.simulatorName}${(params.useLatestOS ?? true) ? ',OS=latest' : ''}`;
+      destinationString = `platform=${platformForDestination},name=${params.simulatorName}${(params.useLatestOS ?? true) ? ',OS=latest' : ''}`;
     } else {
       // This shouldn't happen due to validation, but handle it
-      destinationString = 'platform=iOS Simulator';
+      destinationString = `platform=${platformForDestination}`;
     }
     command.push('-destination', destinationString);
 
@@ -453,7 +471,7 @@ export async function build_run_simLogic(
     }
 
     // --- Success ---
-    log('info', '✅ iOS simulator build & run succeeded.');
+    log('info', `✅ ${platformName} simulator build & run succeeded.`);
 
     const target = params.simulatorId
       ? `simulator UUID '${params.simulatorId}'`
@@ -465,9 +483,9 @@ export async function build_run_simLogic(
       content: [
         {
           type: 'text',
-          text: `✅ iOS simulator build and run succeeded for scheme ${params.scheme} from ${sourceType} ${sourcePath} targeting ${target}.
-          
-The app (${bundleId}) is now running in the iOS Simulator. 
+          text: `✅ ${platformName} simulator build and run succeeded for scheme ${params.scheme} from ${sourceType} ${sourcePath} targeting ${target}.
+
+The app (${bundleId}) is now running in the ${platformName}.
 If you don't see the simulator window, it may be hidden behind other windows. The Simulator app should be open.
 
 Next Steps:
@@ -485,8 +503,9 @@ When done with any option, use: stop_sim_log_cap({ logSessionId: 'SESSION_ID' })
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    log('error', `Error in iOS Simulator build and run: ${errorMessage}`);
-    return createTextResponse(`Error in iOS Simulator build and run: ${errorMessage}`, true);
+    const platformName = params.platform ?? 'iOS Simulator';
+    log('error', `Error in ${platformName} build and run: ${errorMessage}`);
+    return createTextResponse(`Error in ${platformName} build and run: ${errorMessage}`, true);
   }
 }
 
@@ -502,7 +521,7 @@ const publicSchemaObject = baseSchemaObject.omit({
 
 export default {
   name: 'build_run_sim',
-  description: 'Builds and runs an app on an iOS simulator.',
+  description: 'Builds and runs an app on a simulator.',
   schema: publicSchemaObject.shape,
   handler: createSessionAwareTool<BuildRunSimulatorParams>({
     internalSchema: buildRunSimulatorSchema as unknown as z.ZodType<BuildRunSimulatorParams>,

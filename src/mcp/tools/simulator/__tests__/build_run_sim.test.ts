@@ -20,7 +20,7 @@ describe('build_run_sim tool', () => {
     });
 
     it('should have correct description', () => {
-      expect(buildRunSim.description).toBe('Builds and runs an app on an iOS simulator.');
+      expect(buildRunSim.description).toBe('Builds and runs an app on a simulator.');
     });
 
     it('should have handler function', () => {
@@ -45,7 +45,9 @@ describe('build_run_sim tool', () => {
       expect(schema.safeParse({ preferXcodebuild: 'yes' }).success).toBe(false);
 
       const schemaKeys = Object.keys(buildRunSim.schema).sort();
-      expect(schemaKeys).toEqual(['derivedDataPath', 'extraArgs', 'preferXcodebuild'].sort());
+      expect(schemaKeys).toEqual(
+        ['derivedDataPath', 'extraArgs', 'platform', 'preferXcodebuild'].sort(),
+      );
       expect(schemaKeys).not.toContain('scheme');
       expect(schemaKeys).not.toContain('simulatorName');
       expect(schemaKeys).not.toContain('projectPath');

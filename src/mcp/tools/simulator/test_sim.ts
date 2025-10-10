@@ -26,6 +26,11 @@ const baseSchemaObject = z.object({
     .optional()
     .describe('Path to .xcworkspace file. Provide EITHER this OR projectPath, not both'),
   scheme: z.string().describe('The scheme to use (Required)'),
+  platform: z
+    .enum(['iOS Simulator', 'watchOS Simulator', 'tvOS Simulator', 'visionOS Simulator'])
+    .optional()
+    .default('iOS Simulator')
+    .describe('Target simulator platform (defaults to iOS Simulator)'),
   simulatorId: z
     .string()
     .optional()
@@ -81,6 +86,16 @@ export async function test_simLogic(
   params: TestSimulatorParams,
   executor: CommandExecutor,
 ): Promise<ToolResponse> {
+  // Map platform string to XcodePlatform enum
+  const platformMap: Record<string, XcodePlatform> = {
+    'iOS Simulator': XcodePlatform.iOSSimulator,
+    'watchOS Simulator': XcodePlatform.watchOSSimulator,
+    'tvOS Simulator': XcodePlatform.tvOSSimulator,
+    'visionOS Simulator': XcodePlatform.visionOSSimulator,
+  };
+
+  const platform = platformMap[params.platform ?? 'iOS Simulator'] ?? XcodePlatform.iOSSimulator;
+
   // Log warning if useLatestOS is provided with simulatorId
   if (params.simulatorId && params.useLatestOS !== undefined) {
     log(
@@ -101,7 +116,7 @@ export async function test_simLogic(
       extraArgs: params.extraArgs,
       useLatestOS: params.simulatorId ? false : (params.useLatestOS ?? false),
       preferXcodebuild: params.preferXcodebuild ?? false,
-      platform: XcodePlatform.iOSSimulator,
+      platform: platform,
       testRunnerEnv: params.testRunnerEnv,
     },
     executor,
@@ -111,7 +126,7 @@ export async function test_simLogic(
 export default {
   name: 'test_sim',
   description:
-    'Runs tests on a simulator by UUID or name using xcodebuild test and parses xcresult output. Works with both Xcode projects (.xcodeproj) and workspaces (.xcworkspace). IMPORTANT: Requires either projectPath or workspacePath, plus scheme and either simulatorId or simulatorName. Example: test_sim({ projectPath: "/path/to/MyProject.xcodeproj", scheme: "MyScheme", simulatorName: "iPhone 16" })',
+    'Runs tests on a simulator by UUID or name using xcodebuild test and parses xcresult output. Works with both Xcode projects (.xcodeproj) and workspaces (.xcworkspace). IMPORTANT: Requires either projectPath or workspacePath, plus scheme and either simulatorId or simulatorName. Example: test_sim({ projectPath: "/path/to/MyProject.xcodeproj", scheme: "MyScheme", simulatorName: "iPhone 16", platform: "iOS Simulator" })',
   schema: baseSchemaObject.shape, // MCP SDK compatibility
   handler: async (args: Record<string, unknown>): Promise<ToolResponse> => {
     try {

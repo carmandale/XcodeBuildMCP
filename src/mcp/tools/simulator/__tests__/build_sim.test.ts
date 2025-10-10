@@ -17,7 +17,7 @@ describe('build_sim tool', () => {
     });
 
     it('should have correct description', () => {
-      expect(buildSim.description).toBe('Builds an app for an iOS simulator.');
+      expect(buildSim.description).toBe('Builds an app for a simulator.');
     });
 
     it('should have handler function', () => {
