@@ -591,8 +591,8 @@ Users must have XcodeBuildMCP configured in their AI client.
 |---------|-------------|--------|
 | Claude Code | `~/.claude.json` | ✅ Using local build |
 | Cursor | `~/.cursor/mcp.json` | ✅ Using local build |
-| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | ❌ Not installed |
-| Factory Droid | `{project}/.factory/config.toml` (per-project) | ⚠️ No configs |
+| Claude Desktop | `~/.config/claude/mcp.json` | ✅ Using local build |
+| Factory Droid | `~/.factory/mcp.json` | ✅ Using local build |
 
 **For detailed configuration instructions, see:** `@MCP_CONFIG_LOCATIONS.md`
 
