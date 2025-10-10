@@ -96,18 +96,16 @@ cp ~/.claude.json ~/.claude.json.backup
 
 **Location:**
 ```
-~/Library/Application Support/Claude/claude_desktop_config.json
+~/.config/claude/mcp.json
 ```
 
-**Format:** JSON
+**Format:** JSON (servers object, not mcpServers)
 
-**Status:** ❌ Not installed/not used
-
-**If you install Claude Desktop:**
+**Current Configuration:**
 ```json
 {
-  "mcpServers": {
-    "XcodeBuildMCP": {
+  "servers": {
+    "xcodebuildmcp": {
       "command": "node",
       "args": [
         "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/build/index.js"
@@ -117,34 +115,45 @@ cp ~/.claude.json ~/.claude.json.backup
 }
 ```
 
+**Status:** ✅ Using local build
+
+**Note:** Uses `servers` key, not `mcpServers` like other tools
+
 ---
 
 ### 4. Factory Droid CLI (Codex)
 
-**Location:** Per-project configs
+**Location:** Global config (NOT per-project)
 ```
-{project-root}/.factory/config.toml
-```
-
-**Format:** TOML
-
-**Status:** ⚠️ No configs exist in orchestrator projects yet
-
-**If you use Factory Droid, create this file in each project:**
-
-**Example `.factory/config.toml`:**
-```toml
-[mcp_servers.xcodebuildmcp]
-command = "node"
-args = ["/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/build/index.js"]
+~/.factory/mcp.json
 ```
 
-**Projects that would need this:**
-- `groovetech-media-server/.factory/config.toml`
-- `PfizerOutdoCancerV2/.factory/config.toml`
-- `groovetech-media-player/.factory/config.toml`
-- `orchestrator/.factory/config.toml`
-- `AVPStreamKit/.factory/config.toml`
+**Format:** JSON (mcpServers object)
+
+**Current Configuration:**
+```json
+{
+  "mcpServers": {
+    "XcodeBuildMCP": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/build/index.js"
+      ],
+      "env": {
+        "XCODEBUILDMCP_ENABLED_WORKFLOWS": "simulator,device,logging,project-discovery,ui-testing",
+        "XCODEBUILDMCP_SENTRY_DISABLED": "true",
+        "INCREMENTAL_BUILDS_ENABLED": "false"
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+**Status:** ✅ Using local build
+
+**Note:** Factory uses a GLOBAL config, not per-project configs
 
 ---
 
@@ -154,8 +163,8 @@ args = ["/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBu
 |------|-------------|--------|--------|
 | **Claude Code** | `~/.claude.json` | JSON | ✅ Local build |
 | **Cursor** | `~/.cursor/mcp.json` | JSON | ✅ Local build (2 servers) |
-| **Claude Desktop** | `~/Library/Application Support/Claude/claude_desktop_config.json` | JSON | ❌ Not installed |
-| **Factory Droid** | `{project}/.factory/config.toml` | TOML | ⚠️ No configs |
+| **Claude Desktop** | `~/.config/claude/mcp.json` | JSON | ✅ Local build |
+| **Factory Droid** | `~/.factory/mcp.json` | JSON | ✅ Local build |
 
 ---
 
