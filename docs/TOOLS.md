@@ -32,7 +32,7 @@ XcodeBuildMCP provides 61 tools organized into 12 workflow groups for comprehens
 - `open_sim` - Opens the iOS Simulator app.
 - `record_sim_video` - Starts or stops video capture for an iOS simulator using AXe. Provide exactly one of start=true or stop=true. On stop, outputFile is required. fps defaults to 30.
 - `stop_app_sim` - Stops an app running in an iOS simulator by UUID or name. or stop_app_sim({ simulatorName: "iPhone 16", bundleId: "com.example.MyApp" })
-- `test_sim` - Runs tests on a simulator by UUID or name using xcodebuild test and parses xcresult output. Works with both Xcode projects (.xcodeproj) and workspaces (.xcworkspace). Note: For macOS projects, use the `test_macos` tool instead.
+- `test_sim` - Runs tests on a simulator by UUID or name using xcodebuild test and parses xcresult output. Works with both Xcode projects (.xcodeproj) and workspaces (.xcworkspace). Note: For macOS projects, use the `test_macos` tool instead. For iPad testing issues (e.g., "target does not support platform"), see [iPad Testing Troubleshooting Guide](IPAD_TESTING_TROUBLESHOOTING.md).
 ### Log Capture & Management (`logging`)
 **Purpose**: Log capture and management tools for iOS simulators and physical devices. Start, stop, and analyze application and system logs during development and testing. (4 tools)
 
