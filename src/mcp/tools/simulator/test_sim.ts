@@ -27,7 +27,7 @@ const baseSchemaObject = z.object({
     .describe('Path to .xcworkspace file. Provide EITHER this OR projectPath, not both'),
   scheme: z.string().describe('The scheme to use (Required)'),
   platform: z
-    .enum(['iOS Simulator', 'watchOS Simulator', 'tvOS Simulator', 'visionOS Simulator'])
+    .enum(['iOS Simulator', 'watchOS Simulator', 'tvOS Simulator', 'visionOS Simulator', 'macOS'])
     .optional()
     .default('iOS Simulator')
     .describe('Target simulator platform (defaults to iOS Simulator)'),
@@ -77,6 +77,9 @@ const testSimulatorSchema = baseSchema
   })
   .refine((val) => !(val.projectPath !== undefined && val.workspacePath !== undefined), {
     message: 'projectPath and workspacePath are mutually exclusive. Provide only one.',
+  })
+  .refine((val) => val.platform !== 'macOS', {
+    message: 'macOS platform is not supported by test_sim. Use test_macos tool instead for macOS projects.',
   });
 
 // Use z.infer for type safety
