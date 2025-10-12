@@ -612,6 +612,34 @@ Users must have XcodeBuildMCP configured in their AI client.
 **If user reports "command not found":**
 → They need to configure MCP server (see MCP_CONFIG_LOCATIONS.md)
 
+### Session Management Workflow (Required)
+
+For most workflows, the `session-management` workflow MUST be enabled:
+
+```json
+"XCODEBUILDMCP_ENABLED_WORKFLOWS": "simulator,device,logging,project-discovery,ui-testing,session-management"
+```
+
+**Why it's required:**
+- Many tools depend on session defaults (projectPath, scheme, simulatorId, etc.)
+- Without this workflow, `build_sim()`, `test_sim()`, etc. will fail with "Missing required session defaults"
+- The session tools (`session_set_defaults`, `session_clear_defaults`, `session_show_defaults`) are only available when this workflow is enabled
+
+**⚠️ Common Mistake**: Agents attempt to use `build_sim()` without setting session defaults first, causing cryptic errors.
+
+**Correct Pattern:**
+```typescript
+// Step 1: Set session defaults (once per project)
+session_set_defaults({
+  projectPath: "/path/to/project.xcodeproj",
+  scheme: "MyScheme",
+  simulatorId: "SIMULATOR_UUID"
+})
+
+// Step 2: Build with simplified calls
+build_sim({ platform: "iOS Simulator" })
+```
+
 ---
 
 ## 📚 Full Documentation
