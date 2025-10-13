@@ -244,11 +244,46 @@ stop_sim_log_cap({ simulatorId: "[UUID]" })
 
 #### Task 3.2: Test PfizerOutdoCancerV2
 
-**Workflow:**
-1. Verify xros/xrsimulator platforms
-2. Build with targetedDeviceFamily: 7
-3. Document deployment target requirements
-4. Capture build output
+**Complete workflow:**
+```bash
+# 1. List available Vision Pro simulators
+list_sims()
+
+# 2. Boot Vision Pro simulator (if not already booted)
+boot_sim({ simulatorId: "[VISION_PRO_UUID_FROM_STEP_1]" })
+
+# 3. Set session defaults
+session-set-defaults({
+  projectPath: "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/PfizerOutdoCancerV2/PfizerOutdoCancer.xcodeproj",
+  scheme: "PfizerOutdoCancer",
+  simulatorId: "[VISION_PRO_UUID_FROM_STEP_1]"
+})
+
+# 4. Build for visionOS simulator
+build_sim_id_proj()
+
+# 5. Install app
+install_app_sim({ simulatorId: "[VISION_PRO_UUID_FROM_STEP_1]" })
+
+# 6. Launch app
+launch_app_sim({
+  simulatorId: "[VISION_PRO_UUID_FROM_STEP_1]",
+  bundleId: "com.groovejones.PfizerOutdoCancer"
+})
+
+# 7. Capture expected output
+# ✅ BUILD SUCCEEDED
+# ✅ App installed successfully
+# ✅ App launched successfully
+```
+
+**Deliverables:**
+- [ ] Capture complete build output with visionOS platform details
+- [ ] Screenshot of app running in Vision Pro simulator
+- [ ] Document targetedDeviceFamily: 7 behavior
+- [ ] Document deployment target: 26.0 requirements
+- [ ] Verify xros/xrsimulator platform handling
+- [ ] Update status: ✅ Tested (2025-10-13)
 
 #### Task 3.3: Document visionOS Differences
 
@@ -336,8 +371,11 @@ diff doc_tools.txt actual_tools.txt
 ```markdown
 | Project | Platform | Status | Tested Date | Notes |
 |---------|----------|--------|-------------|-------|
-| orchestrator | iPad | ✅ TESTED | 2025-10-13 | All workflows verified |
-| groovetech-media-player | visionOS | ✅ TESTED | 2025-10-13 | Build + install verified |
+| orchestrator | iPad | ✅ TESTED | 2025-10-13 | Build + Install + Launch + Logs verified |
+| groovetech-media-player | visionOS | ✅ TESTED | 2025-10-13 | Build + Install + Launch verified |
+| groovetech-media-server | macOS | ✅ TESTED | 2025-10-13 | Build + Launch verified |
+| PfizerOutdoCancerV2 | visionOS | ✅ TESTED | 2025-10-13 | Build + Install + Launch verified |
+| AVPStreamKit | Swift Package | ✅ TESTED | 2025-10-13 | Build + Test verified |
 ```
 
 #### Task 5.4: Add Test Evidence Links
@@ -364,9 +402,9 @@ For each tested workflow, add:
 ### Testing Requirements
 
 - [ ] orchestrator (iPad): Build + Install + Launch + Logs tested
-- [ ] groovetech-media-player (visionOS): Build + Install tested
+- [ ] groovetech-media-player (visionOS): Build + Install + Launch tested
 - [ ] groovetech-media-server (macOS): Build + Launch tested
-- [ ] PfizerOutdoCancerV2 (visionOS): Build tested
+- [ ] PfizerOutdoCancerV2 (visionOS): Build + Install + Launch tested
 - [ ] AVPStreamKit (Swift Package): Build + Test tested
 - [ ] Test logs captured for all workflows
 - [ ] Screenshots captured for successful builds
