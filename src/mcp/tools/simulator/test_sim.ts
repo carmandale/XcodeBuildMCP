@@ -79,7 +79,8 @@ const testSimulatorSchema = baseSchema
     message: 'projectPath and workspacePath are mutually exclusive. Provide only one.',
   })
   .refine((val) => val.platform !== 'macOS', {
-    message: 'macOS platform is not supported by test_sim. Use test_macos tool instead for macOS projects.',
+    message:
+      'macOS platform is not supported by test_sim. Use test_macos tool instead for macOS projects.',
   });
 
 // Use z.infer for type safety
