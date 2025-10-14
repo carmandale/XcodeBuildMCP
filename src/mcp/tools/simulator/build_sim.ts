@@ -152,18 +152,9 @@ export async function build_simLogic(
   return _handleSimulatorBuildLogic(processedParams, executor);
 }
 
-// Public schema = internal minus session-managed fields
-// Note: platform is NOT session-managed and is exposed to clients for explicit per-call specification
-const publicSchemaObject = baseSchemaObject.omit({
-  projectPath: true,
-  workspacePath: true,
-  scheme: true,
-  configuration: true,
-  simulatorId: true,
-  simulatorName: true,
-  useLatestOS: true,
-  // platform is NOT omitted - it's available for clients to specify
-} as const);
+// Public schema = all fields optional (session defaults can provide values)
+// This allows agents to provide parameters explicitly OR rely on session defaults
+const publicSchemaObject = baseSchemaObject;
 
 export default {
   name: 'build_sim',

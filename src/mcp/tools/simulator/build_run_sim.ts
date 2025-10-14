@@ -509,15 +509,9 @@ When done with any option, use: stop_sim_log_cap({ logSessionId: 'SESSION_ID' })
   }
 }
 
-const publicSchemaObject = baseSchemaObject.omit({
-  projectPath: true,
-  workspacePath: true,
-  scheme: true,
-  configuration: true,
-  simulatorId: true,
-  simulatorName: true,
-  useLatestOS: true,
-} as const);
+// Public schema = all fields optional (session defaults can provide values)
+// This allows agents to provide parameters explicitly OR rely on session defaults
+const publicSchemaObject = baseSchemaObject;
 
 export default {
   name: 'build_run_sim',
