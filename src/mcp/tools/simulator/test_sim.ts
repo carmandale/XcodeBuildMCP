@@ -13,6 +13,7 @@ import { XcodePlatform } from '../../../types/common.ts';
 import { ToolResponse } from '../../../types/common.ts';
 import type { CommandExecutor } from '../../../utils/execution/index.ts';
 import { getDefaultCommandExecutor } from '../../../utils/execution/index.ts';
+import { createSessionAwareTool } from '../../../utils/typed-tool-factory.ts';
 import { nullifyEmptyStrings } from '../../../utils/schema-helpers.ts';
 
 // Define base schema object with all fields
@@ -129,35 +130,52 @@ export async function test_simLogic(
 
 export default {
   name: 'test_sim',
-  description:
-    'Runs tests on a simulator by UUID or name using xcodebuild test and parses xcresult output. Works with both Xcode projects (.xcodeproj) and workspaces (.xcworkspace). IMPORTANT: Requires either projectPath or workspacePath, plus scheme and either simulatorId or simulatorName. Example: test_sim({ projectPath: "/path/to/MyProject.xcodeproj", scheme: "MyScheme", simulatorName: "iPhone 16", platform: "iOS Simulator" })',
+  description: `Runs tests on a simulator by UUID or name using xcodebuild test and parses xcresult output. Works with both Xcode projects (.xcodeproj) and workspaces (.xcworkspace).
+
+**Session Workflow**: You can provide parameters explicitly OR set defaults once with session-set-defaults.
+
+Required parameters (provide explicitly OR via session):
+- scheme: The scheme to test
+- projectPath OR workspacePath: Path to project or workspace
+- simulatorId OR simulatorName: Simulator identifier
+
+Example with explicit parameters:
+test_sim({ projectPath: "/path/to/MyProject.xcodeproj", scheme: "MyScheme", simulatorName: "iPhone 16" })
+
+Example with session defaults:
+1. Set defaults once: session-set-defaults({ projectPath: "/path/to/MyProject.xcodeproj", scheme: "MyScheme" })
+2. Then call with minimal params: test_sim({ simulatorName: "iPhone 16" })`,
   schema: baseSchemaObject.shape, // MCP SDK compatibility
-  handler: async (args: Record<string, unknown>): Promise<ToolResponse> => {
-    try {
-      // Runtime validation with XOR constraints
-      const validatedParams = testSimulatorSchema.parse(args);
-      return await test_simLogic(validatedParams, getDefaultCommandExecutor());
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Format validation errors in a user-friendly way
-        const errorMessages = error.errors.map((e) => {
-          const path = e.path.length > 0 ? `${e.path.join('.')}` : 'root';
-          return `${path}: ${e.message}`;
-        });
+  handler: createSessionAwareTool<TestSimulatorParams>({
+    internalSchema: testSimulatorSchema as unknown as z.ZodType<TestSimulatorParams>,
+    logicFunction: test_simLogic,
+    getExecutor: getDefaultCommandExecutor,
+    requirements: [
+      {
+        allOf: ['scheme'],
+        message: `scheme is required.
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Parameter validation failed. Invalid parameters:\n${errorMessages.join('\n')}`,
-            },
-          ],
-          isError: true,
-        };
-      }
+Set with: session-set-defaults({ "scheme": "MyScheme" })
+OR provide explicitly in test_sim call.`,
+      },
+      {
+        oneOf: ['projectPath', 'workspacePath'],
+        message: `Either projectPath or workspacePath required.
 
-      // Re-throw unexpected errors
-      throw error;
-    }
-  },
+Set with: session-set-defaults({ "projectPath": "/path/to/MyApp.xcodeproj" })
+OR provide explicitly in test_sim call.`,
+      },
+      {
+        oneOf: ['simulatorId', 'simulatorName'],
+        message: `Either simulatorId or simulatorName required.
+
+Set with: session-set-defaults({ "simulatorName": "iPhone 16" })
+OR provide explicitly in test_sim call.`,
+      },
+    ],
+    exclusivePairs: [
+      ['projectPath', 'workspacePath'],
+      ['simulatorId', 'simulatorName'],
+    ],
+  }),
 };
