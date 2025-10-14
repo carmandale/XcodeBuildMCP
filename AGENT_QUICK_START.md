@@ -1,7 +1,7 @@
 # XcodeBuildMCP Quick Start for AI Agents
 
-> **Version:** 1.3.0
-> **Last Updated:** 2025-10-12
+> **Version:** 1.4.0
+> **Last Updated:** 2025-10-14
 > **FOR AI ASSISTANTS:** This is your quick reference for **macOS, iPadOS, and visionOS** development commands. Use these exact phrases when helping users build Apple apps across all platforms.
 
 ## ✅ Verified Working - All Commands Tested
@@ -45,6 +45,220 @@ You have access to **86 tools** for building, testing, and debugging across all 
 **What it does:**
 - `get_app_bundle_id()` - For iOS/visionOS apps
 - `get_mac_bundle_id()` - For macOS apps
+
+---
+
+## 🔄 Session Management Workflow
+
+XcodeBuildMCP supports **session defaults** to reduce repetitive parameters across tool calls. This is the **recommended workflow** for all development tasks.
+
+### How Session Defaults Work
+
+1. **Set defaults once** for common parameters like `projectPath`, `scheme`, `configuration`
+2. **Use any tool** with minimal parameters - session defaults are automatically applied
+3. **Override when needed** - explicit parameters always take precedence over session defaults
+
+### Step-by-Step Example
+
+#### Step 1: Set Defaults Once
+```typescript
+session-set-defaults({
+  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
+  scheme: "orchestrator",
+  configuration: "Debug",
+  simulatorId: "IPHONE_16_UUID"  // Optional: Get from list_sims()
+})
+```
+
+#### Step 2: Use Tools with Minimal Parameters
+```typescript
+// Build with just platform specification
+build_sim({ platform: "iOS Simulator" })
+
+// Test with just simulator name (overriding session simulatorId)
+test_sim({ simulatorName: "iPad Pro" })
+
+// Run with session defaults only
+build_run_sim({})  // Uses all session defaults
+```
+
+#### Step 3: Override When Needed
+```typescript
+// Use different scheme for this one call
+test_sim({
+  simulatorName: "iPhone 16",
+  scheme: "orchestrator-unit-tests"  // Overrides session default
+})
+
+// Use Release configuration instead of Debug
+build_sim({
+  platform: "iOS Simulator",
+  configuration: "Release"  // Overrides session default
+})
+```
+
+### Supported Session Parameters
+
+All build/test/run tools support these session defaults:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `projectPath` | string | Path to .xcodeproj file (XOR with workspacePath) |
+| `workspacePath` | string | Path to .xcworkspace file (XOR with projectPath) |
+| `scheme` | string | Xcode scheme name (required for most operations) |
+| `configuration` | string | Build configuration: "Debug" (default) or "Release" |
+| `simulatorName` | string | Simulator name (e.g., "iPhone 16", "iPad Pro") |
+| `simulatorId` | string | Simulator UUID (XOR with simulatorName) |
+| `deviceId` | string | Physical device UDID |
+| `useLatestOS` | boolean | Use latest OS version for named simulator |
+| `arch` | string | Architecture: "arm64" or "x86_64" |
+| `platform` | string | Platform: "iOS Simulator", "visionOS Simulator", etc. |
+
+### Managing Session Defaults
+
+**View Current Defaults:**
+```typescript
+session-show-defaults()
+// Returns: { projectPath: "...", scheme: "...", ... }
+```
+
+**Update Specific Defaults:**
+```typescript
+// Add or update specific defaults (preserves other defaults)
+session-set-defaults({
+  configuration: "Release",
+  simulatorName: "iPad Pro"
+})
+```
+
+**Clear Specific Defaults:**
+```typescript
+session-clear-defaults({
+  keys: ["scheme", "configuration"]
+})
+```
+
+**Clear All Defaults:**
+```typescript
+session-clear-defaults()
+// Clears all session defaults
+```
+
+### Best Practices
+
+1. **Set project-level defaults at start of session**
+   ```typescript
+   session-set-defaults({
+     projectPath: "/path/to/project.xcodeproj",  // or workspacePath
+     scheme: "MyScheme",
+     configuration: "Debug"  // Optional, defaults to Debug
+   })
+   ```
+
+2. **Use explicit parameters for one-off changes**
+   - Different simulator: `build_sim({ simulatorName: "iPad Pro" })`
+   - Different scheme: `test_sim({ scheme: "UnitTests" })`
+   - Release builds: `build_sim({ configuration: "Release" })`
+
+3. **Clear defaults when switching projects**
+   ```typescript
+   session-clear-defaults()
+   session-set-defaults({
+     projectPath: "/new/project.xcodeproj",
+     scheme: "NewScheme"
+   })
+   ```
+
+4. **Verify defaults before building**
+   ```typescript
+   session-show-defaults()  // Check what defaults are currently set
+   ```
+
+### Troubleshooting
+
+**Error: "scheme is required"**
+```typescript
+// Either set session default:
+session-set-defaults({ scheme: "MyScheme" })
+
+// Or provide explicitly:
+test_sim({
+  scheme: "MyScheme",
+  projectPath: "/path/to/project.xcodeproj"
+})
+```
+
+**Error: "Either projectPath or workspacePath is required"**
+```typescript
+// Set session default:
+session-set-defaults({ projectPath: "/path/to/MyApp.xcodeproj" })
+
+// Or provide explicitly:
+test_sim({
+  projectPath: "/path/to/MyApp.xcodeproj",
+  scheme: "MyScheme"
+})
+```
+
+**Error: "projectPath and workspacePath are mutually exclusive"**
+```typescript
+// Clear conflicting defaults:
+session-clear-defaults({ keys: ["projectPath", "workspacePath"] })
+
+// Then set only one:
+session-set-defaults({ workspacePath: "/path/to/MyApp.xcworkspace" })
+```
+
+**Error: "simulatorId and simulatorName are mutually exclusive"**
+```typescript
+// Clear conflicting defaults:
+session-clear-defaults({ keys: ["simulatorId", "simulatorName"] })
+
+// Then set only one:
+session-set-defaults({ simulatorName: "iPhone 16" })
+```
+
+### Why Use Session Defaults?
+
+**Without Session Defaults (Verbose):**
+```typescript
+build_sim({
+  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
+  scheme: "orchestrator",
+  configuration: "Debug",
+  simulatorId: "LONG-UUID-HERE",
+  platform: "iOS Simulator"
+})
+
+test_sim({
+  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
+  scheme: "orchestrator",
+  configuration: "Debug",
+  simulatorId: "LONG-UUID-HERE"
+})
+```
+
+**With Session Defaults (Concise):**
+```typescript
+// Set once
+session-set-defaults({
+  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
+  scheme: "orchestrator",
+  configuration: "Debug",
+  simulatorId: "LONG-UUID-HERE"
+})
+
+// Then use anywhere
+build_sim({ platform: "iOS Simulator" })
+test_sim({})
+build_run_sim({})
+```
+
+**Benefits:**
+- ✅ Reduces repetitive parameters by 70-80%
+- ✅ Fewer agent mistakes (less to type = fewer errors)
+- ✅ Easier to switch configurations (one call updates all subsequent operations)
+- ✅ Clearer intent (only specify what's different from defaults)
 
 ---
 

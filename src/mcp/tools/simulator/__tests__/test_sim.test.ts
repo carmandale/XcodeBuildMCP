@@ -228,7 +228,6 @@ describe('test_sim tool', () => {
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
     });
-
   });
 
   describe('Error Messages', () => {
