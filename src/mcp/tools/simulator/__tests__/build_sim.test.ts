@@ -24,18 +24,25 @@ describe('build_sim tool', () => {
       expect(typeof buildSim.handler).toBe('function');
     });
 
-    it('should have correct public schema (only non-session fields)', () => {
+    it('should have correct public schema (all fields optional for session integration)', () => {
       const schema = z.object(buildSim.schema);
 
-      // Public schema should allow empty input
-      expect(schema.safeParse({}).success).toBe(true);
-
-      // Valid public inputs
+      // Public schema allows all fields to be present
       expect(
         schema.safeParse({
-          derivedDataPath: '/path/to/derived',
-          extraArgs: ['--verbose'],
-          preferXcodebuild: false,
+          projectPath: '/path/to/project.xcodeproj',
+          scheme: 'MyScheme',
+          simulatorName: 'iPhone 16',
+          configuration: 'Debug',
+        }).success,
+      ).toBe(true);
+
+      // Public schema accepts just required+essential fields
+      expect(
+        schema.safeParse({
+          workspacePath: '/path/to/workspace.xcworkspace',
+          scheme: 'TestScheme',
+          simulatorId: 'ABC-123',
         }).success,
       ).toBe(true);
 

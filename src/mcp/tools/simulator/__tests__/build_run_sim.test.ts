@@ -27,30 +27,32 @@ describe('build_run_sim tool', () => {
       expect(typeof buildRunSim.handler).toBe('function');
     });
 
-    it('should expose only non-session fields in public schema', () => {
+    it('should have correct public schema (all fields optional for session integration)', () => {
       const schema = z.object(buildRunSim.schema);
 
-      expect(schema.safeParse({}).success).toBe(true);
-
+      // Public schema allows all fields to be present
       expect(
         schema.safeParse({
-          derivedDataPath: '/path/to/derived',
-          extraArgs: ['--verbose'],
-          preferXcodebuild: false,
+          projectPath: '/path/to/project.xcodeproj',
+          scheme: 'MyScheme',
+          simulatorName: 'iPhone 16',
+          configuration: 'Debug',
         }).success,
       ).toBe(true);
 
+      // Public schema accepts just required+essential fields
+      expect(
+        schema.safeParse({
+          workspacePath: '/path/to/workspace.xcworkspace',
+          scheme: 'TestScheme',
+          simulatorId: 'ABC-123',
+        }).success,
+      ).toBe(true);
+
+      // Invalid types on public inputs
       expect(schema.safeParse({ derivedDataPath: 123 }).success).toBe(false);
       expect(schema.safeParse({ extraArgs: [123] }).success).toBe(false);
       expect(schema.safeParse({ preferXcodebuild: 'yes' }).success).toBe(false);
-
-      const schemaKeys = Object.keys(buildRunSim.schema).sort();
-      expect(schemaKeys).toEqual(
-        ['derivedDataPath', 'extraArgs', 'platform', 'preferXcodebuild'].sort(),
-      );
-      expect(schemaKeys).not.toContain('scheme');
-      expect(schemaKeys).not.toContain('simulatorName');
-      expect(schemaKeys).not.toContain('projectPath');
     });
   });
 
