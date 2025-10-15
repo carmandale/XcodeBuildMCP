@@ -89,11 +89,14 @@ function createSessionAwareError(zodError: z.ZodError): ToolResponse {
  * @param schema - Zod schema for validation (should include all validation rules via .refine())
  * @param logicFunction - Tool logic function
  * @param getExecutor - Function to get command executor
+ * @param exclusivePairs - Optional array of mutually exclusive parameter pairs (e.g., [['projectPath', 'workspacePath']])
+ *                         When an explicit parameter is provided, its counterpart is removed from session defaults
  */
 export function createSessionAwareTool<TParams>(
   schema: z.ZodType<TParams>,
   logicFunction: (params: TParams, executor: CommandExecutor) => Promise<ToolResponse>,
   getExecutor: () => CommandExecutor,
+  exclusivePairs?: Array<[string, string]>,
 ): (args: Record<string, unknown>) => Promise<ToolResponse> {
   return async (args: Record<string, unknown>): Promise<ToolResponse> => {
     try {
@@ -105,8 +108,24 @@ export function createSessionAwareTool<TParams>(
         }
       }
 
-      // Simple merge: explicit args override session defaults
-      const merged = { ...sessionStore.getAll(), ...cleanedArgs };
+      // Get session defaults as mutable record for pruning
+      const sessionDefaults: Record<string, unknown> = { ...sessionStore.getAll() };
+
+      // Prune conflicting session defaults when explicit args provided
+      // This ensures "explicit overrides session" for XOR fields
+      if (exclusivePairs) {
+        for (const [field1, field2] of exclusivePairs) {
+          if (cleanedArgs[field1] !== undefined && sessionDefaults[field2] !== undefined) {
+            delete sessionDefaults[field2];
+          }
+          if (cleanedArgs[field2] !== undefined && sessionDefaults[field1] !== undefined) {
+            delete sessionDefaults[field1];
+          }
+        }
+      }
+
+      // Merge: explicit args override session defaults
+      const merged = { ...sessionDefaults, ...cleanedArgs };
 
       // Let Zod handle all validation (including XOR constraints)
       const validated = schema.parse(merged);
@@ -116,7 +135,9 @@ export function createSessionAwareTool<TParams>(
       if (error instanceof z.ZodError) {
         return createSessionAwareError(error);
       }
-      throw error;
+      // Don't re-throw - convert all errors to ToolResponse
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return createErrorResponse('Unexpected error occurred', errorMessage);
     }
   };
 }

@@ -107,7 +107,17 @@ export default {
           isError: true,
         };
       }
-      throw error;
+      // Don't re-throw - convert all errors to ToolResponse to prevent MCP server crash
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: Unexpected error occurred\nDetails: ${errorMessage}`,
+          },
+        ],
+        isError: true,
+      };
     }
   },
 };

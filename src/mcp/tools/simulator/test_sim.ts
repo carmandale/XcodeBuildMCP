@@ -142,5 +142,9 @@ Example with session defaults:
     testSimulatorSchema as unknown as z.ZodType<TestSimulatorParams>,
     test_simLogic,
     getDefaultCommandExecutor,
+    [
+      ['projectPath', 'workspacePath'],
+      ['simulatorId', 'simulatorName'],
+    ],
   ),
 };

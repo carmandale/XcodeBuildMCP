@@ -469,5 +469,9 @@ export default {
     buildRunSimulatorSchema as unknown as z.ZodType<BuildRunSimulatorParams>,
     build_run_simLogic,
     getDefaultCommandExecutor,
+    [
+      ['projectPath', 'workspacePath'],
+      ['simulatorId', 'simulatorName'],
+    ],
   ),
 };
