@@ -122,9 +122,9 @@ session-set-defaults({ workspacePath: "/path/to/MyApp.xcworkspace" })
 **Step 1: Set Session Defaults (once per project)**
 ```typescript
 session-set-defaults({
-  projectPath: "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/groovetech-media-player/groovetech-media-player.xcodeproj",
-  scheme: "groovetech-media-player",
-  simulatorId: "VISION_PRO_SIMULATOR_UUID"  // Get from list_sims()
+  projectPath: "/path/to/your-project/your-project.xcodeproj",
+  scheme: "your-scheme-name",
+  simulatorId: "YOUR_SIMULATOR_UUID"  // Get from list_sims()
 })
 ```
 
@@ -529,7 +529,7 @@ Users must have XcodeBuildMCP configured in their AI client.
   "XcodeBuildMCP": {
     "command": "node",
     "args": [
-      "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/build/index.js"
+      "/path/to/XcodeBuildMCP/build/index.js"
     ],
     "env": {}
   }
@@ -558,9 +558,9 @@ For most workflows, the `session-management` workflow MUST be enabled:
 ```typescript
 // Step 1: Set session defaults (once per project)
 session-set-defaults({
-  projectPath: "/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/orchestrator/orchestrator.xcodeproj",
-  scheme: "orchestrator",
-  simulatorId: "IPAD_SIMULATOR_UUID"  // Get from list_sims()
+  projectPath: "/path/to/your-project/your-project.xcodeproj",
+  scheme: "your-scheme-name",
+  simulatorId: "YOUR_SIMULATOR_UUID"  // Get from list_sims()
 })
 
 // Step 2: Build with simplified calls

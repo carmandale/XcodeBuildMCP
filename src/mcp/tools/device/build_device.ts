@@ -12,6 +12,7 @@ import type { CommandExecutor } from '../../../utils/execution/index.ts';
 import { getDefaultCommandExecutor } from '../../../utils/execution/index.ts';
 import { createTypedTool } from '../../../utils/typed-tool-factory.ts';
 import { nullifyEmptyStrings } from '../../../utils/schema-helpers.ts';
+import { mapPlatformStringToEnum } from '../../../utils/platform-utils.ts';
 
 // Unified schema: XOR between projectPath and workspacePath
 const baseSchemaObject = z.object({
@@ -53,9 +54,10 @@ export async function buildDeviceLogic(
     configuration: params.configuration ?? 'Debug', // Default config
   };
 
-  // Map platform string to XcodePlatform enum, default to iOS
-  const platform = (params.platform as XcodePlatform) || XcodePlatform.iOS;
-  const platformName = params.platform || 'iOS';
+  // Map platform string to XcodePlatform enum using utility function
+  // Note: For device builds, we use the raw platform value if provided, defaulting to iOS
+  const platform = params.platform ? mapPlatformStringToEnum(params.platform) : XcodePlatform.iOS;
+  const platformName = params.platform ?? 'iOS';
 
   return executeXcodeBuildCommand(
     processedParams,

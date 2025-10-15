@@ -1031,16 +1031,16 @@ export default {
 
 ### XcodeBuildMCP Documentation
 
-1. **Plugin Development Guide**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/docs/PLUGIN_DEVELOPMENT.md`
-2. **Architecture Guide**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/docs/ARCHITECTURE.md`
-3. **Testing Guide**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/docs/TESTING.md`
+1. **Plugin Development Guide**: `docs/PLUGIN_DEVELOPMENT.md`
+2. **Architecture Guide**: `docs/ARCHITECTURE.md`
+3. **Testing Guide**: `docs/TESTING.md`
 
 ### Key Source Files
 
-1. **Typed Tool Factory**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/src/utils/typed-tool-factory.ts`
-2. **Tool Registry**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/src/utils/tool-registry.ts`
-3. **Plugin Registry**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/src/core/plugin-registry.ts`
-4. **Example Tool**: `/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev/XcodeBuildMCP/src/mcp/tools/simulator/boot_sim.ts`
+1. **Typed Tool Factory**: `src/utils/typed-tool-factory.ts`
+2. **Tool Registry**: `src/utils/tool-registry.ts`
+3. **Plugin Registry**: `src/core/plugin-registry.ts`
+4. **Example Tool**: `src/mcp/tools/simulator/boot_sim.ts`
 
 ---
 

@@ -9,8 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SOURCE_FILE="$PROJECT_ROOT/AGENT_QUICK_START.md"
 
-# Base directory for all projects
-DEV_BASE="/Users/dalecarman/Groove Jones Dropbox/Dale Carman/Projects/dev"
+# Base directory for all projects (override with DEV_BASE env var)
+DEV_BASE="${DEV_BASE:-$HOME/Projects/dev}"
 
 # Target repositories
 REPOS=(

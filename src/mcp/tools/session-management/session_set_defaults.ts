@@ -34,11 +34,32 @@ type Params = z.infer<typeof schemaObj>;
 export async function sessionSetDefaultsLogic(params: Params): Promise<ToolResponse> {
   try {
     // Clear mutually exclusive counterparts before merging new defaults
+    // Only clear if actual value (not undefined/null) is provided
     const toClear = new Set<keyof SessionDefaults>();
-    if (Object.prototype.hasOwnProperty.call(params, 'projectPath')) toClear.add('workspacePath');
-    if (Object.prototype.hasOwnProperty.call(params, 'workspacePath')) toClear.add('projectPath');
-    if (Object.prototype.hasOwnProperty.call(params, 'simulatorId')) toClear.add('simulatorName');
-    if (Object.prototype.hasOwnProperty.call(params, 'simulatorName')) toClear.add('simulatorId');
+    if (
+      Object.prototype.hasOwnProperty.call(params, 'projectPath') &&
+      params.projectPath !== undefined
+    ) {
+      toClear.add('workspacePath');
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(params, 'workspacePath') &&
+      params.workspacePath !== undefined
+    ) {
+      toClear.add('projectPath');
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(params, 'simulatorId') &&
+      params.simulatorId !== undefined
+    ) {
+      toClear.add('simulatorName');
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(params, 'simulatorName') &&
+      params.simulatorName !== undefined
+    ) {
+      toClear.add('simulatorId');
+    }
 
     if (toClear.size > 0) {
       sessionStore.clear(Array.from(toClear));
