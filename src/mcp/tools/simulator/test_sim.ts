@@ -8,13 +8,13 @@
 
 import { z } from 'zod';
 import { handleTestLogic } from '../../../utils/test/index.ts';
-import { log } from '../../../utils/logging/index.ts';
-import { XcodePlatform } from '../../../types/common.ts';
 import { ToolResponse } from '../../../types/common.ts';
 import type { CommandExecutor } from '../../../utils/execution/index.ts';
 import { getDefaultCommandExecutor } from '../../../utils/execution/index.ts';
 import { createSessionAwareTool } from '../../../utils/typed-tool-factory.ts';
 import { nullifyEmptyStrings } from '../../../utils/schema-helpers.ts';
+import { logUseLatestOSWarning } from '../../../utils/simulator-validation.ts';
+import { mapPlatformStringToEnum } from '../../../utils/platform-utils.ts';
 
 // Define base schema object with all fields
 const baseSchemaObject = z.object({
@@ -91,23 +91,10 @@ export async function test_simLogic(
   params: TestSimulatorParams,
   executor: CommandExecutor,
 ): Promise<ToolResponse> {
-  // Map platform string to XcodePlatform enum
-  const platformMap: Record<string, XcodePlatform> = {
-    'iOS Simulator': XcodePlatform.iOSSimulator,
-    'watchOS Simulator': XcodePlatform.watchOSSimulator,
-    'tvOS Simulator': XcodePlatform.tvOSSimulator,
-    'visionOS Simulator': XcodePlatform.visionOSSimulator,
-  };
-
-  const platform = platformMap[params.platform ?? 'iOS Simulator'] ?? XcodePlatform.iOSSimulator;
+  const platform = mapPlatformStringToEnum(params.platform);
 
   // Log warning if useLatestOS is provided with simulatorId
-  if (params.simulatorId && params.useLatestOS !== undefined) {
-    log(
-      'warning',
-      `useLatestOS parameter is ignored when using simulatorId (UUID implies exact device/OS)`,
-    );
-  }
+  logUseLatestOSWarning(params.simulatorId, params.useLatestOS);
 
   return handleTestLogic(
     {
