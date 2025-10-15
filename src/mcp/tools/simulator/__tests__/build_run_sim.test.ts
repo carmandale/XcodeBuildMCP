@@ -603,4 +603,74 @@ describe('build_run_sim tool', () => {
       expect(result.content[0].text).toContain('Build failed');
     });
   });
+
+  describe('Empty String Handling', () => {
+    it('should treat empty string scheme as missing via preprocessor', async () => {
+      const result = await buildRunSim.handler({
+        projectPath: '/path/to/project.xcodeproj',
+        scheme: '',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('scheme is required');
+    });
+
+    it('should treat whitespace-only scheme as missing via preprocessor', async () => {
+      const result = await buildRunSim.handler({
+        projectPath: '/path/to/project.xcodeproj',
+        scheme: '   ',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('scheme is required');
+    });
+
+    it('should treat empty projectPath as missing', async () => {
+      const result = await buildRunSim.handler({
+        projectPath: '',
+        scheme: 'MyScheme',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Provide a project or workspace');
+    });
+
+    it('should treat empty workspacePath as missing', async () => {
+      const result = await buildRunSim.handler({
+        workspacePath: '',
+        scheme: 'MyScheme',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Provide a project or workspace');
+    });
+
+    it('should treat empty simulatorName as missing', async () => {
+      const result = await buildRunSim.handler({
+        projectPath: '/path/to/project.xcodeproj',
+        scheme: 'MyScheme',
+        simulatorName: '',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Provide simulatorId or simulatorName');
+    });
+
+    it('should handle empty string in session defaults combined with explicit params', async () => {
+      sessionStore.setDefaults({
+        scheme: '',
+        projectPath: '/path/to/project.xcodeproj',
+      });
+
+      const result = await buildRunSim.handler({ simulatorName: 'iPhone 16' });
+
+      // Empty scheme in session defaults should be treated as undefined
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('scheme is required');
+    });
+  });
 });

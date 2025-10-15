@@ -518,6 +518,8 @@ export default {
   description: 'Builds and runs an app on a simulator.',
   schema: publicSchemaObject.shape,
   handler: createSessionAwareTool<BuildRunSimulatorParams>({
+    // Type assertion required: Zod's .refine() changes the schema type signature,
+    // but the validated output type is still BuildRunSimulatorParams
     internalSchema: buildRunSimulatorSchema as unknown as z.ZodType<BuildRunSimulatorParams>,
     logicFunction: build_run_simLogic,
     getExecutor: getDefaultCommandExecutor,

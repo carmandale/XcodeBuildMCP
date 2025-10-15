@@ -85,7 +85,7 @@ const testSimulatorSchema = baseSchema
   });
 
 // Use z.infer for type safety
-type TestSimulatorParams = z.infer<typeof testSimulatorSchema>;
+export type TestSimulatorParams = z.infer<typeof testSimulatorSchema>;
 
 export async function test_simLogic(
   params: TestSimulatorParams,
@@ -147,31 +147,15 @@ Example with session defaults:
 2. Then call with minimal params: test_sim({ simulatorName: "iPhone 16" })`,
   schema: baseSchemaObject.shape, // MCP SDK compatibility
   handler: createSessionAwareTool<TestSimulatorParams>({
+    // Type assertion required: Zod's .refine() changes the schema type signature,
+    // but the validated output type is still TestSimulatorParams
     internalSchema: testSimulatorSchema as unknown as z.ZodType<TestSimulatorParams>,
     logicFunction: test_simLogic,
     getExecutor: getDefaultCommandExecutor,
     requirements: [
-      {
-        allOf: ['scheme'],
-        message: `scheme is required.
-
-Set with: session-set-defaults({ "scheme": "MyScheme" })
-OR provide explicitly in test_sim call.`,
-      },
-      {
-        oneOf: ['projectPath', 'workspacePath'],
-        message: `Either projectPath or workspacePath required.
-
-Set with: session-set-defaults({ "projectPath": "/path/to/MyApp.xcodeproj" })
-OR provide explicitly in test_sim call.`,
-      },
-      {
-        oneOf: ['simulatorId', 'simulatorName'],
-        message: `Either simulatorId or simulatorName required.
-
-Set with: session-set-defaults({ "simulatorName": "iPhone 16" })
-OR provide explicitly in test_sim call.`,
-      },
+      { allOf: ['scheme'], message: 'scheme is required' },
+      { oneOf: ['projectPath', 'workspacePath'], message: 'Provide a project or workspace' },
+      { oneOf: ['simulatorId', 'simulatorName'], message: 'Provide simulatorId or simulatorName' },
     ],
     exclusivePairs: [
       ['projectPath', 'workspacePath'],

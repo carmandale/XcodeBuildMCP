@@ -161,6 +161,8 @@ export default {
   description: 'Builds an app for a simulator.',
   schema: publicSchemaObject.shape, // MCP SDK compatibility (public inputs only)
   handler: createSessionAwareTool<BuildSimulatorParams>({
+    // Type assertion required: Zod's .refine() changes the schema type signature,
+    // but the validated output type is still BuildSimulatorParams
     internalSchema: buildSimulatorSchema as unknown as z.ZodType<BuildSimulatorParams>,
     logicFunction: build_simLogic,
     getExecutor: getDefaultCommandExecutor,

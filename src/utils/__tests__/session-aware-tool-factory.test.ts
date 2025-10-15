@@ -1,12 +1,35 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { z } from 'zod';
 import { createSessionAwareTool } from '../typed-tool-factory.ts';
 import { sessionStore } from '../session-store.ts';
 import { createMockExecutor } from '../../test-utils/mock-executors.ts';
 
 describe('createSessionAwareTool', () => {
+  let tempDir: string;
+  let testProjectPath: string;
+  let testProjectPath2: string;
+
   beforeEach(() => {
     sessionStore.clear();
+    // Create a temporary directory and test files
+    tempDir = mkdtempSync(join(tmpdir(), 'session-aware-tool-test-'));
+    testProjectPath = join(tempDir, 'proj.xcodeproj');
+    testProjectPath2 = join(tempDir, 'a.xcodeproj');
+    writeFileSync(testProjectPath, 'test content');
+    writeFileSync(testProjectPath2, 'test content');
+  });
+
+  afterEach(() => {
+    sessionStore.clear();
+    // Clean up temporary directory
+    try {
+      rmSync(tempDir, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   const internalSchema = z
@@ -46,7 +69,7 @@ describe('createSessionAwareTool', () => {
   it('should merge session defaults and satisfy requirements', async () => {
     sessionStore.setDefaults({
       scheme: 'App',
-      projectPath: '/path/proj.xcodeproj',
+      projectPath: testProjectPath,
       simulatorId: 'SIM-1',
     });
 
@@ -76,7 +99,7 @@ describe('createSessionAwareTool', () => {
 
     sessionStore.setDefaults({
       scheme: 'Default',
-      projectPath: '/a.xcodeproj',
+      projectPath: testProjectPath2,
       simulatorId: 'SIM-A',
     });
     const result = await echoHandler({ scheme: 'FromArgs' });
@@ -124,7 +147,7 @@ describe('createSessionAwareTool', () => {
 
     sessionStore.setDefaults({
       scheme: 'App',
-      projectPath: '/path/proj.xcodeproj',
+      projectPath: testProjectPath,
       simulatorId: 'SIM-1',
     });
 
@@ -147,7 +170,7 @@ describe('createSessionAwareTool', () => {
 
     sessionStore.setDefaults({
       scheme: 'App',
-      projectPath: '/path/proj.xcodeproj',
+      projectPath: testProjectPath,
       simulatorId: 'SIM-1',
     });
 

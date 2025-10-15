@@ -57,7 +57,7 @@ describe('test_sim tool', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Missing required session defaults');
-      expect(result.content[0].text).toContain('Either projectPath or workspacePath required');
+      expect(result.content[0].text).toContain('Provide a project or workspace');
     });
 
     it('should handle both projectPath and workspacePath provided', async () => {
@@ -94,7 +94,7 @@ describe('test_sim tool', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Missing required session defaults');
-      expect(result.content[0].text).toContain('Either simulatorId or simulatorName required');
+      expect(result.content[0].text).toContain('Provide simulatorId or simulatorName');
     });
 
     it('should handle both simulatorId and simulatorName provided', async () => {
@@ -427,6 +427,76 @@ describe('test_sim tool', () => {
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('macOS platform is not supported');
       expect(result.content[0].text).toContain('test_macos');
+    });
+  });
+
+  describe('Empty String Handling', () => {
+    it('should treat empty string scheme as missing via preprocessor', async () => {
+      const result = await testSim.handler({
+        projectPath: '/path/to/project.xcodeproj',
+        scheme: '',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('scheme is required');
+    });
+
+    it('should treat whitespace-only scheme as missing via preprocessor', async () => {
+      const result = await testSim.handler({
+        projectPath: '/path/to/project.xcodeproj',
+        scheme: '   ',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('scheme is required');
+    });
+
+    it('should treat empty projectPath as missing', async () => {
+      const result = await testSim.handler({
+        projectPath: '',
+        scheme: 'MyScheme',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Provide a project or workspace');
+    });
+
+    it('should treat empty workspacePath as missing', async () => {
+      const result = await testSim.handler({
+        workspacePath: '',
+        scheme: 'MyScheme',
+        simulatorName: 'iPhone 16',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Provide a project or workspace');
+    });
+
+    it('should treat empty simulatorName as missing', async () => {
+      const result = await testSim.handler({
+        projectPath: '/path/to/project.xcodeproj',
+        scheme: 'MyScheme',
+        simulatorName: '',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Provide simulatorId or simulatorName');
+    });
+
+    it('should handle empty string in session defaults combined with explicit params', async () => {
+      sessionStore.setDefaults({
+        scheme: '',
+        projectPath: '/path/to/project.xcodeproj',
+      });
+
+      const result = await testSim.handler({ simulatorName: 'iPhone 16' });
+
+      // Empty scheme in session defaults should be treated as undefined
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('scheme is required');
     });
   });
 });

@@ -50,215 +50,66 @@ You have access to **86 tools** for building, testing, and debugging across all 
 
 ## 🔄 Session Management Workflow
 
-XcodeBuildMCP supports **session defaults** to reduce repetitive parameters across tool calls. This is the **recommended workflow** for all development tasks.
+XcodeBuildMCP supports **session defaults** to reduce repetitive parameters. Set common values once, then use any tool with minimal parameters.
 
-### How Session Defaults Work
+### Complete Workflow Example
 
-1. **Set defaults once** for common parameters like `projectPath`, `scheme`, `configuration`
-2. **Use any tool** with minimal parameters - session defaults are automatically applied
-3. **Override when needed** - explicit parameters always take precedence over session defaults
-
-### Step-by-Step Example
-
-#### Step 1: Set Defaults Once
 ```typescript
+// Step 1: Set defaults once
 session-set-defaults({
   projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
   scheme: "orchestrator",
   configuration: "Debug",
   simulatorId: "IPHONE_16_UUID"  // Optional: Get from list_sims()
 })
-```
 
-#### Step 2: Use Tools with Minimal Parameters
-```typescript
-// Build with just platform specification
-build_sim({ platform: "iOS Simulator" })
+// Step 2: Use tools with minimal parameters
+build_sim({ platform: "iOS Simulator" })  // Uses session defaults
+test_sim({ simulatorName: "iPad Pro" })    // Overrides simulatorId
+build_run_sim({})                          // Uses all session defaults
 
-// Test with just simulator name (overriding session simulatorId)
-test_sim({ simulatorName: "iPad Pro" })
-
-// Run with session defaults only
-build_run_sim({})  // Uses all session defaults
-```
-
-#### Step 3: Override When Needed
-```typescript
-// Use different scheme for this one call
+// Step 3: Override when needed
 test_sim({
-  simulatorName: "iPhone 16",
-  scheme: "orchestrator-unit-tests"  // Overrides session default
-})
-
-// Use Release configuration instead of Debug
-build_sim({
-  platform: "iOS Simulator",
-  configuration: "Release"  // Overrides session default
+  scheme: "orchestrator-unit-tests",  // Override for this call only
+  simulatorName: "iPhone 16"
 })
 ```
 
-### Supported Session Parameters
+### Session Management API
 
-All build/test/run tools support these session defaults:
+| Tool | Purpose |
+|------|---------|
+| `session-set-defaults(params)` | Set or update defaults (preserves unspecified values) |
+| `session-show-defaults()` | View current defaults |
+| `session-clear-defaults()` | Clear all defaults |
+| `session-clear-defaults({ keys: ["scheme"] })` | Clear specific defaults |
+
+### Supported Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `projectPath` | string | Path to .xcodeproj file (XOR with workspacePath) |
-| `workspacePath` | string | Path to .xcworkspace file (XOR with projectPath) |
+| `projectPath` | string | Path to .xcodeproj (XOR with workspacePath) |
+| `workspacePath` | string | Path to .xcworkspace (XOR with projectPath) |
 | `scheme` | string | Xcode scheme name (required for most operations) |
-| `configuration` | string | Build configuration: "Debug" (default) or "Release" |
+| `configuration` | string | "Debug" (default) or "Release" |
 | `simulatorName` | string | Simulator name (e.g., "iPhone 16", "iPad Pro") |
 | `simulatorId` | string | Simulator UUID (XOR with simulatorName) |
 | `deviceId` | string | Physical device UDID |
-| `useLatestOS` | boolean | Use latest OS version for named simulator |
-| `arch` | string | Architecture: "arm64" or "x86_64" |
-| `platform` | string | Platform: "iOS Simulator", "visionOS Simulator", etc. |
+| `platform` | string | "iOS Simulator", "visionOS Simulator", etc. |
 
-### Managing Session Defaults
+### Common Errors
 
-**View Current Defaults:**
+**Missing scheme:**
 ```typescript
-session-show-defaults()
-// Returns: { projectPath: "...", scheme: "...", ... }
-```
-
-**Update Specific Defaults:**
-```typescript
-// Add or update specific defaults (preserves other defaults)
-session-set-defaults({
-  configuration: "Release",
-  simulatorName: "iPad Pro"
-})
-```
-
-**Clear Specific Defaults:**
-```typescript
-session-clear-defaults({
-  keys: ["scheme", "configuration"]
-})
-```
-
-**Clear All Defaults:**
-```typescript
-session-clear-defaults()
-// Clears all session defaults
-```
-
-### Best Practices
-
-1. **Set project-level defaults at start of session**
-   ```typescript
-   session-set-defaults({
-     projectPath: "/path/to/project.xcodeproj",  // or workspacePath
-     scheme: "MyScheme",
-     configuration: "Debug"  // Optional, defaults to Debug
-   })
-   ```
-
-2. **Use explicit parameters for one-off changes**
-   - Different simulator: `build_sim({ simulatorName: "iPad Pro" })`
-   - Different scheme: `test_sim({ scheme: "UnitTests" })`
-   - Release builds: `build_sim({ configuration: "Release" })`
-
-3. **Clear defaults when switching projects**
-   ```typescript
-   session-clear-defaults()
-   session-set-defaults({
-     projectPath: "/new/project.xcodeproj",
-     scheme: "NewScheme"
-   })
-   ```
-
-4. **Verify defaults before building**
-   ```typescript
-   session-show-defaults()  // Check what defaults are currently set
-   ```
-
-### Troubleshooting
-
-**Error: "scheme is required"**
-```typescript
-// Either set session default:
 session-set-defaults({ scheme: "MyScheme" })
-
-// Or provide explicitly:
-test_sim({
-  scheme: "MyScheme",
-  projectPath: "/path/to/project.xcodeproj"
-})
+// or provide explicitly: test_sim({ scheme: "MyScheme", projectPath: "..." })
 ```
 
-**Error: "Either projectPath or workspacePath is required"**
+**Mutually exclusive parameters (projectPath/workspacePath or simulatorId/simulatorName):**
 ```typescript
-// Set session default:
-session-set-defaults({ projectPath: "/path/to/MyApp.xcodeproj" })
-
-// Or provide explicitly:
-test_sim({
-  projectPath: "/path/to/MyApp.xcodeproj",
-  scheme: "MyScheme"
-})
-```
-
-**Error: "projectPath and workspacePath are mutually exclusive"**
-```typescript
-// Clear conflicting defaults:
 session-clear-defaults({ keys: ["projectPath", "workspacePath"] })
-
-// Then set only one:
 session-set-defaults({ workspacePath: "/path/to/MyApp.xcworkspace" })
 ```
-
-**Error: "simulatorId and simulatorName are mutually exclusive"**
-```typescript
-// Clear conflicting defaults:
-session-clear-defaults({ keys: ["simulatorId", "simulatorName"] })
-
-// Then set only one:
-session-set-defaults({ simulatorName: "iPhone 16" })
-```
-
-### Why Use Session Defaults?
-
-**Without Session Defaults (Verbose):**
-```typescript
-build_sim({
-  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
-  scheme: "orchestrator",
-  configuration: "Debug",
-  simulatorId: "LONG-UUID-HERE",
-  platform: "iOS Simulator"
-})
-
-test_sim({
-  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
-  scheme: "orchestrator",
-  configuration: "Debug",
-  simulatorId: "LONG-UUID-HERE"
-})
-```
-
-**With Session Defaults (Concise):**
-```typescript
-// Set once
-session-set-defaults({
-  projectPath: "/Users/dale/Projects/orchestrator/orchestrator.xcodeproj",
-  scheme: "orchestrator",
-  configuration: "Debug",
-  simulatorId: "LONG-UUID-HERE"
-})
-
-// Then use anywhere
-build_sim({ platform: "iOS Simulator" })
-test_sim({})
-build_run_sim({})
-```
-
-**Benefits:**
-- ✅ Reduces repetitive parameters by 70-80%
-- ✅ Fewer agent mistakes (less to type = fewer errors)
-- ✅ Easier to switch configurations (one call updates all subsequent operations)
-- ✅ Clearer intent (only specify what's different from defaults)
 
 ---
 
@@ -522,15 +373,6 @@ iPadOS uses the **same tools as iOS** - just specify iPad simulators or devices.
 
 ## 📋 Complete Tool Reference by Platform
 
-### Platform Detection Rules
-
-| User Says | Platform | Tools Used |
-|-----------|----------|------------|
-| "Vision Pro" / "visionOS" | visionOS | `build_sim(platform: "visionOS Simulator")` or `build_device(platform: "visionOS")` |
-| "iPad" / "iPadOS" | iOS | `build_sim(simulatorName: "iPad Pro")` or `build_device(platform: "iOS")` |
-| "Mac app" / "macOS" | macOS | `build_macos()`, `launch_mac_app()` |
-| "iPhone" / "iOS" | iOS | Same as iPad |
-
 ### Simulator Tools (iOS/iPadOS/visionOS)
 
 | Natural Language | Tool Called | Platforms |
@@ -586,217 +428,69 @@ iPadOS uses the **same tools as iOS** - just specify iPad simulators or devices.
 
 ---
 
-## 🔥 Log Capture Troubleshooting (CRITICAL - READ THIS!)
+## 🔥 Log Capture Troubleshooting (CRITICAL)
 
-### The Problem: "Started capture but failed to stop"
+### Common Problem: Agent Says "Started" But Never Called The Tool
 
-**User reports:** "Agent says it started log capture, but when I tell them to stop, they say it failed."
+**Root Cause:** Agent says "I've started log capture" without actually calling `start_device_log_cap()`, then fails when calling stop because no session ID exists.
 
-### Root Cause: Agents Aren't Actually Calling The Tools!
+### Correct Workflow
 
-**What's happening:**
-1. Agent SAYS "I've started log capture" but doesn't actually call `start_device_log_cap()`
-2. No session ID is created
-3. User reproduces issue
-4. Agent tries to call `stop_device_log_cap()` with no valid session ID
-5. Fails because no capture was ever started
+```typescript
+// Step 1: ACTUALLY call start tool
+start_device_log_cap({ deviceId: "...", bundleId: "..." })
+// Returns: { sessionId: "abc-123-def" }
 
-### ❌ WRONG Pattern (This Is What Fails):
+// Step 2: Save the session ID and confirm
+"✅ Log capture started (Session: abc-123-def). Please reproduce the issue."
 
-```
-Agent: "I've started capturing logs from your Vision Pro."
-[Agent did NOT actually call start_device_log_cap - just said they did]
+// Step 3: User reproduces issue
 
-User: "Done reproducing the issue"
-
-Agent: [Calls stop_device_log_cap()]
-ERROR: No active log capture session found
-Agent: "Failed to capture logs"
+// Step 4: Call stop with EXACT session ID
+stop_device_log_cap({ logSessionId: "abc-123-def" })
+// Returns: { logs: "actual log contents..." }
 ```
 
-### ✅ CORRECT Pattern (This Actually Works):
+### Two Most Common Mistakes
 
-**Step 1: ACTUALLY Call start_device_log_cap**
-```
-Agent: "I'm starting log capture now..."
-[Agent ACTUALLY calls start_device_log_cap({ deviceId: "...", bundleId: "..." })]
-[Tool returns: { sessionId: "abc-123-def" }]
+**1. Agent never calls start tool**
+- ❌ Agent says: "I've started capturing logs"
+- ✅ Must call: `start_device_log_cap()` and receive session ID
 
-Agent: "✅ Log capture started (Session: abc-123-def)"
-      "Please reproduce the issue on your device."
-```
+**2. Agent loses or forgets session ID**
+- ❌ Agent calls: `stop_device_log_cap({ logSessionId: undefined })`
+- ✅ Must use: EXACT session ID from start call
 
-**Step 2: Save The Session ID**
-- **CRITICAL:** Store the `sessionId` returned by `start_device_log_cap()`
-- You MUST use this EXACT session ID when calling `stop_device_log_cap()`
+### Pre-Flight Checklist
 
-**Step 3: Wait For User To Reproduce**
-```
-User: "Done, I reproduced the crash"
-```
-
-**Step 4: ACTUALLY Call stop_device_log_cap With The EXACT Session ID**
-```
-Agent: "Retrieving logs now..."
-[Agent calls stop_device_log_cap({ logSessionId: "abc-123-def" })]
-[Tool returns complete logs]
-
-Agent: "Here are the logs..."
-[Agent analyzes the actual log contents]
-```
-
-### Verification Checklist For Agents:
-
-Before telling the user you started log capture, verify:
-
+**Before calling stop:**
 - [ ] Did you ACTUALLY call `start_device_log_cap()` or `start_sim_log_cap()`?
-- [ ] Did you receive a `sessionId` back from the tool?
-- [ ] Did you SAVE that session ID?
-- [ ] Did you tell the user the session ID for confirmation?
-
-Before calling stop, verify:
-
-- [ ] Do you have the EXACT `sessionId` from the start call?
-- [ ] Are you passing it as `logSessionId` parameter to the stop call?
-- [ ] Did the start call actually succeed?
-
-### Common Failure Scenarios:
-
-**Scenario 1: Agent Never Called Start**
-```
-❌ Agent says: "I've started capturing logs"
-✅ Should actually call: start_device_log_cap() and show session ID
-```
-
-**Scenario 2: Agent Lost Session ID**
-```
-❌ Agent calls: stop_device_log_cap({ logSessionId: undefined })
-✅ Should use: stop_device_log_cap({ logSessionId: "abc-123-def" })
-```
-
-**Scenario 3: Agent Calls Wrong Device Type**
-```
-❌ Started with: start_device_log_cap() (physical device)
-❌ Stopped with: stop_sim_log_cap() (simulator)
-✅ Must match: Use device tools for devices, sim tools for simulators
-```
-
-### Debug Template For Agents:
-
-When user says "start capturing logs", follow this EXACT template:
-
-```
-Step 1: Call the start tool
-Tool: start_device_log_cap({ deviceId: "USER_DEVICE_ID", bundleId: "com.user.app" })
-Response: { sessionId: "abc-123-def" }
-
-Step 2: Confirm with user
-"✅ Log capture started (Session: abc-123-def)"
-"Please reproduce the issue now."
-
-Step 3: Wait for user confirmation
-[User reproduces issue]
-
-Step 4: Call stop with EXACT session ID
-Tool: stop_device_log_cap({ logSessionId: "abc-123-def" })
-Response: { logs: "actual log contents..." }
-
-Step 5: Analyze logs
-[Show user the actual log contents and analysis]
-```
-
-### If Log Capture Still Fails:
-
-**Check these:**
-1. Device is connected and unlocked
-2. App is installed on device
-3. Bundle ID is correct
-4. User has permission to access device logs
-5. `xcrun devicectl` is working (run: `xcrun devicectl list devices`)
-
-**For simulators:**
-1. Simulator is booted
-2. App is installed in simulator
-3. Simulator UUID is correct
+- [ ] Did you receive and SAVE the `sessionId`?
+- [ ] Are you using the EXACT session ID in stop call?
+- [ ] Did you match device/simulator tool types (don't mix device and sim tools)?
 
 ---
 
 ## 🔄 Example Workflows
 
-### Example 1: iPad App Development
-```
-User: "I want to test my app on iPad Pro simulator"
-
-AI: "I'll help you build and run on iPad Pro simulator.
-     Let me check available simulators."
-     [Calls list_sims()]
-
-AI: "Found iPad Pro (17.4). Building now..."
-     [Calls build_sim() → boot_sim() → install_app_sim() → launch_app_sim()]
-
-AI: "✅ Your app is running on iPad Pro simulator!"
+**iPad Simulator:** Build + run workflow
+```typescript
+[list_sims()] → [build_sim()] → [boot_sim()] → [install_app_sim()] → [launch_app_sim()]
 ```
 
-### Example 2: macOS App Debugging
-```
-User: "Build and run my Mac app"
-
-AI: "Building your macOS app..."
-     [Calls build_run_macos()]
-
-AI: "✅ Your Mac app is now running!"
-
-User: "It crashed. Can you help debug?"
-
-AI: "Let me check the console logs and crash reports..."
-     [Analyzes Console.app output or crash logs]
+**macOS App:** Single-command build and launch
+```typescript
+[build_run_macos()]  // Builds and launches in one step
 ```
 
-### Example 3: Vision Pro Physical Device Testing
-```
-User: "My hand tracking isn't working on the headset"
-
-AI: "I'll capture logs from your Vision Pro to investigate."
-     [Calls start_device_log_cap()]
-
-AI: "Log capture started. Please reproduce the hand tracking issue."
-
-User: [Puts on headset, triggers issue]
-User: "Done"
-
-AI: [Calls stop_device_log_cap()]
-    "I found the issue! Line 42 in HandTrackingManager.swift..."
+**Vision Pro Debugging:** Log capture workflow
+```typescript
+[start_device_log_cap()] → User reproduces issue → [stop_device_log_cap()] → Analyze logs
 ```
 
-### Example 4: Orchestrator iPad Build (VERIFIED WORKING)
-```
-User: "Build the orchestrator app for iPad simulator"
-
-AI: "I'll build orchestrator for iPad Pro simulator."
-     [Calls session-set-defaults()]
-
-AI: "Session defaults set for orchestrator project."
-     [Calls build_sim({ platform: "iOS Simulator" })]
-
-AI: "✅ Building orchestrator...
-     XcodeBuildMCP integration works! Build invoked successfully."
-
-Note: orchestrator iPad build tested and working (2025-10-12 14:47).
-      macOS build currently fails with compilation error (2025-10-13 09:22).
-      Test target is macOS-only.
-```
-
-### Example 5: Cross-Platform Build
-```
-User: "Build my app for all platforms"
-
-AI: "I'll build for macOS, iPad, and Vision Pro."
-     [Calls build_macos(), build_sim(iPad), build_sim(Vision Pro)]
-
-AI: "✅ All builds successful:
-     - macOS app ready
-     - iPad simulator ready
-     - Vision Pro simulator ready"
+**Cross-Platform:** Parallel builds
+```typescript
+[build_macos()] + [build_sim(iPad)] + [build_sim(Vision Pro)]
 ```
 
 ---
@@ -884,86 +578,28 @@ For complete details:
 
 ---
 
-## 🧪 Testing Status - What's Actually Verified
+## 🧪 Testing Status
 
-**Last Tested:** 2025-10-12 14:47 CST
-**Environment:** macOS with Xcode 16.x
-**Test Projects:** orchestrator (iPad + macOS multi-platform), groovetech-media-server (macOS), groovetech-media-player (visionOS), PfizerOutdoCancerV2 (visionOS)
+**Last Tested:** 2025-10-12 | **Environment:** macOS + Xcode 16.x
 
-### ✅ Confirmed Working (End-to-End Tested)
+### Platform Support Matrix
 
-| Workflow | Platform | Test Result | Evidence |
-|----------|----------|-------------|----------|
-| **iPad simulator build** | iPadOS | ✅ WORKS | orchestrator (multi-platform) - session-set-defaults + build_sim confirmed working |
-| **iPad simulator log capture** | iPadOS | ✅ WORKS | Captured logs with session ID, retrieved successfully |
-| **macOS build** | macOS | ✅ WORKS | groovetech-media-server built successfully |
-| **macOS launch** | macOS | ✅ WORKS | App launched and stopped successfully |
-| **Simulator detection** | All | ✅ WORKS | `list_sims()` correctly lists iOS, iPadOS, visionOS simulators |
-| **Device detection** | All | ✅ WORKS | `list_devices()` detects all connected Apple devices |
-
-### ✅ FIXED in v1.2.0 - visionOS Builds Now Work
-
-| Workflow | Platform | Test Result | Fix Details |
-|----------|----------|-------------|-------------|
-| **visionOS simulator build** | visionOS | ✅ WORKS | Added `platform` parameter - tested with groovetech-media-player and PfizerOutdoCancerV2 |
-
-**What Was Fixed:**
-- **Before:** `build_sim()` hardcoded to "iOS Simulator" platform
-- **After:** `build_sim({ platform: "visionOS Simulator" })` now works correctly
-- **Files Changed:** build_sim.ts, build_run_sim.ts, test_sim.ts
-- **Tested:** 2025-10-10 with both visionOS projects - both succeed
-
-### 📋 Not Tested (Requires Physical Devices)
-
-| Workflow | Platform | Status | Notes |
-|----------|----------|--------|-------|
-| **Physical device builds** | visionOS/iPad | 📋 Not tested | Requires connected hardware |
-| **Device log capture** | All devices | 📋 Not tested | Requires connected hardware - USER REPORTS AGENT MISTAKES |
-| **UI automation** | Simulators | 📋 Not tested | Tools exist, not verified |
-
-### Platform Support Matrix (UPDATED WITH REAL RESULTS)
-
-| Platform | Simulator Build | Simulator Log Capture | macOS Launch | Status |
-|----------|-----------------|----------------------|--------------|--------|
+| Platform | Simulator Build | Simulator Log | macOS Launch | Status |
+|----------|-----------------|---------------|--------------|--------|
 | **iPadOS** | ✅ WORKS | ✅ WORKS | N/A | Fully tested |
 | **macOS** | N/A | N/A | ✅ WORKS | Fully tested |
 | **visionOS** | ✅ WORKS (v1.2.0+) | 📋 Not tested | N/A | Build verified |
-| **iOS** | ✅ WORKS | 📋 Not tested | N/A | Uses same tools as iPad |
+| **iOS** | ✅ WORKS | 📋 Not tested | N/A | Same as iPad |
 
-**Legend:**
-- ✅ Tested and confirmed working
-- ❌ Tested and confirmed broken
-- 📋 Not tested
-- N/A - Not applicable
+**Legend:** ✅ Tested | ❌ Broken | 📋 Not tested | N/A - Not applicable
 
-### Known Issues
+### Known Issues & Fixes
 
-**🟢 FIXED in v1.2.0: visionOS Simulator Builds Now Work**
-- **Fixed Tools:** `build_sim()`, `build_run_sim()`, `test_sim()`
-- **Solution:** Added `platform` parameter to all three tools
-- **Usage:** `build_sim({ platform: "visionOS Simulator" })` with session defaults
-- **Tested:** groovetech-media-player and PfizerOutdoCancerV2 both build successfully
+**✅ FIXED in v1.2.0:** visionOS builds now work with `platform: "visionOS Simulator"` parameter
 
-**Log Capture Agent Mistakes (USER REPORTED):**
-- Agents say "started capture" without calling `start_device_log_cap()`
-- Agents lose session ID between start/stop calls
-- **Solution:** See "Log Capture Troubleshooting" section above
+**⚠️ Log Capture:** Agents forget to call `start_device_log_cap()` or lose session IDs (see troubleshooting section)
 
-**If commands aren't working:**
-1. Check this testing status section first
-2. Verify XcodeBuildMCP is configured (check MCP config)
-3. Run doctor: `npx --package xcodebuildmcp@latest xcodebuildmcp-doctor`
-4. **For visionOS:** Ensure using v1.2.0+ and include `platform: "visionOS Simulator"` parameter
-5. **Report failures** - Don't silently fall back without telling user
-
----
-
-**✅ Verified Results (v1.3.0):**
-- ✅ **orchestrator iPad build**: XcodeBuildMCP session-management + build_sim workflow confirmed working for iPad (2025-10-12)
-- ❌ **orchestrator macOS build**: Build fails with compilation error in AppUIModel.swift:1534 - type '(key: String, value: Date)' cannot conform to 'RangeExpression' (tested 2025-10-13 09:22)
-- ✅ iPad simulator builds work (orchestrator integration tested)
-- ✅ macOS builds work (groovetech-media-server tested)
-- ✅ visionOS simulator builds work (groovetech-media-player + PfizerOutdoCancerV2 tested)
-- ✅ Simulator log capture works (iPad tested)
-- ✅ Session defaults workflow: **CRITICAL for agent success** - enables build_sim, test_sim, etc.
-- ✅ All platforms verified working with platform parameter
+**If commands fail:**
+1. Run doctor: `npx --package xcodebuildmcp@latest xcodebuildmcp-doctor`
+2. Verify MCP configuration
+3. For visionOS: Use v1.2.0+ with `platform` parameter
