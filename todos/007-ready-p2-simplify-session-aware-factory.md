@@ -2,8 +2,10 @@
 status: ready
 priority: p2
 issue_id: "007"
+github_issue: 7
+epic: 3
 tags: [architecture, simplification, yagni, technical-debt, refactoring]
-dependencies: []
+dependencies: [001, 002, 003, 004]
 ---
 
 # Simplify Session-Aware Factory by Removing Requirements DSL

@@ -2,8 +2,11 @@
 status: ready
 priority: p2
 issue_id: "001"
+github_issue: 5
+epic: 3
 tags: [code-quality, maintainability, duplication, typescript, schemas]
 dependencies: []
+blocks: [002, 003, 004, 007]
 ---
 
 # Extract Duplicated Schema Definitions to Shared Module

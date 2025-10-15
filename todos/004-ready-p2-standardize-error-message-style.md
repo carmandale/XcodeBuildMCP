@@ -2,6 +2,8 @@
 status: ready
 priority: p2
 issue_id: "004"
+github_issue: 8
+epic: 3
 tags: [code-quality, consistency, user-experience, error-messages]
 dependencies: []
 ---

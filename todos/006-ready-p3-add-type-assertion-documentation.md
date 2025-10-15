@@ -2,6 +2,8 @@
 status: ready
 priority: p3
 issue_id: "006"
+github_issue: 8
+epic: 3
 tags: [code-quality, documentation, maintainability, typescript]
 dependencies: []
 ---

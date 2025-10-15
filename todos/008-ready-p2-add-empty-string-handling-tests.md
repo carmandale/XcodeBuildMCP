@@ -2,6 +2,8 @@
 status: ready
 priority: p2
 issue_id: "008"
+github_issue: 6
+epic: 3
 tags: [testing, data-integrity, validation, consistency, test-coverage]
 dependencies: []
 ---

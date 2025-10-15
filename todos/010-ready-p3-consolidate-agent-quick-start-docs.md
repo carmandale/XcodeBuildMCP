@@ -2,6 +2,8 @@
 status: ready
 priority: p3
 issue_id: "010"
+github_issue: 9
+epic: 3
 tags: [documentation, simplification, maintainability, user-experience]
 dependencies: []
 ---

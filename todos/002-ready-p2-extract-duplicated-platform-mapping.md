@@ -2,8 +2,10 @@
 status: ready
 priority: p2
 issue_id: "002"
+github_issue: 5
+epic: 3
 tags: [code-quality, maintainability, duplication, typescript, utilities]
-dependencies: []
+dependencies: [001]
 ---
 
 # Extract Duplicated Platform Mapping Logic

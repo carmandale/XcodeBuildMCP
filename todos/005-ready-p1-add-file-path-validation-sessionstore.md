@@ -2,6 +2,8 @@
 status: ready
 priority: p1
 issue_id: "005"
+github_issue: 4
+epic: 3
 tags: [data-integrity, security, validation, session-management, critical]
 dependencies: []
 ---

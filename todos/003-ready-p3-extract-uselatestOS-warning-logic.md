@@ -2,8 +2,10 @@
 status: ready
 priority: p3
 issue_id: "003"
+github_issue: 5
+epic: 3
 tags: [code-quality, maintainability, duplication, typescript, utilities]
-dependencies: []
+dependencies: [001]
 ---
 
 # Extract Duplicated useLatestOS Warning Logic
