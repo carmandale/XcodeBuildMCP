@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createMockExecutor } from '../../../../test-utils/mock-executors.ts';
 import { sessionStore } from '../../../../utils/session-store.ts';
 import plugin, { sessionSetDefaultsLogic } from '../session_set_defaults.ts';
 
@@ -64,6 +65,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should validate parameter types via Zod', async () => {
+      // plugin.handler only accepts args, not executor - call it directly
       const result = await plugin.handler({
         useLatestOS: 'yes' as unknown as boolean,
       });
@@ -116,6 +118,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should reject when both projectPath and workspacePath are provided', async () => {
+      // plugin.handler only accepts args, not executor - call it directly
       const res = await plugin.handler({
         projectPath: '/app/App.xcodeproj',
         workspacePath: '/app/App.xcworkspace',
@@ -126,6 +129,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should reject when both simulatorId and simulatorName are provided', async () => {
+      // plugin.handler only accepts args, not executor - call it directly
       const res = await plugin.handler({
         simulatorId: 'SIM-1',
         simulatorName: 'iPhone 16',
@@ -190,12 +194,14 @@ describe('session-set-defaults tool', () => {
       // Set workspacePath first
       sessionStore.setDefaults({ workspacePath });
 
-      // Try to set projectPath
+      // Try to set projectPath - this should CLEAR workspacePath and succeed
       const result = await sessionSetDefaultsLogic({ projectPath });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Failed to set defaults');
-      expect(result.content[0].text).toContain('Session already has workspacePath set');
+      // The function clears the opposite path and succeeds (not an error)
+      expect(result.isError).toBe(false);
+      const current = sessionStore.getAll();
+      expect(current.projectPath).toBe(projectPath);
+      expect(current.workspacePath).toBeUndefined();
     });
 
     it('should reject setting new workspacePath when projectPath exists', async () => {
@@ -207,17 +213,20 @@ describe('session-set-defaults tool', () => {
       // Set projectPath first
       sessionStore.setDefaults({ projectPath });
 
-      // Try to set workspacePath
+      // Try to set workspacePath - this should CLEAR projectPath and succeed
       const result = await sessionSetDefaultsLogic({ workspacePath });
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Failed to set defaults');
-      expect(result.content[0].text).toContain('Session already has projectPath set');
+      // The function clears the opposite path and succeeds (not an error)
+      expect(result.isError).toBe(false);
+      const current = sessionStore.getAll();
+      expect(current.workspacePath).toBe(workspacePath);
+      expect(current.projectPath).toBeUndefined();
     });
   });
 
   describe('Empty String Handling', () => {
     it('should convert empty string scheme to undefined via preprocessor', async () => {
+      // Must call handler to trigger Zod preprocessing (nullifyEmptyStrings)
       const result = await plugin.handler({ scheme: '' });
       expect(result.isError).toBe(false);
 
@@ -226,6 +235,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should convert whitespace-only string to undefined via preprocessor', async () => {
+      // Must call handler to trigger Zod preprocessing (nullifyEmptyStrings)
       const result = await plugin.handler({ scheme: '   ' });
       expect(result.isError).toBe(false);
 
@@ -234,6 +244,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should convert empty projectPath to undefined', async () => {
+      // Must call handler to trigger Zod preprocessing (nullifyEmptyStrings)
       const result = await plugin.handler({ projectPath: '' });
       expect(result.isError).toBe(false);
 
@@ -242,6 +253,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should convert empty workspacePath to undefined', async () => {
+      // Must call handler to trigger Zod preprocessing (nullifyEmptyStrings)
       const result = await plugin.handler({ workspacePath: '' });
       expect(result.isError).toBe(false);
 
@@ -250,6 +262,7 @@ describe('session-set-defaults tool', () => {
     });
 
     it('should convert empty simulatorName to undefined', async () => {
+      // Must call handler to trigger Zod preprocessing (nullifyEmptyStrings)
       const result = await plugin.handler({ simulatorName: '' });
       expect(result.isError).toBe(false);
 

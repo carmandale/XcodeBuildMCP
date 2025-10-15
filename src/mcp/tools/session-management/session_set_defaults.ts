@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import { sessionStore, type SessionDefaults } from '../../../utils/session-store.ts';
-import { createTypedTool } from '../../../utils/typed-tool-factory.ts';
-import { getDefaultCommandExecutor } from '../../../utils/execution/index.ts';
 import type { ToolResponse } from '../../../types/common.ts';
 import { nullifyEmptyStrings } from '../../../utils/schema-helpers.ts';
 
@@ -66,9 +64,29 @@ export default {
   description:
     'Set the session defaults needed by many tools. Most tools require one or more session defaults to be set before they can be used. Agents should set the relevant defaults at the beginning of a session.',
   schema: baseSchemaObject.shape,
-  handler: createTypedTool(
-    schemaObj as z.ZodType<Params>,
-    sessionSetDefaultsLogic,
-    getDefaultCommandExecutor,
-  ),
+  handler: async (args: Record<string, unknown>): Promise<ToolResponse> => {
+    try {
+      // Runtime validation
+      const validatedParams = schemaObj.parse(args);
+      // sessionSetDefaultsLogic doesn't need an executor
+      return await sessionSetDefaultsLogic(validatedParams);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessages = error.errors.map((e) => {
+          const path = e.path.length > 0 ? `${e.path.join('.')}` : 'root';
+          return `${path}: ${e.message}`;
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: Parameter validation failed\nDetails: Invalid parameters:\n${errorMessages.join('\n')}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+      throw error;
+    }
+  },
 };
