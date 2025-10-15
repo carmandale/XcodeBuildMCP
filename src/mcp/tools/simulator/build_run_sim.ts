@@ -463,20 +463,11 @@ export default {
   name: 'build_run_sim',
   description: 'Builds and runs an app on a simulator.',
   schema: publicSchemaObject.shape,
-  handler: createSessionAwareTool<BuildRunSimulatorParams>({
+  handler: createSessionAwareTool<BuildRunSimulatorParams>(
     // Type assertion required: Zod's .refine() changes the schema type signature,
     // but the validated output type is still BuildRunSimulatorParams
-    internalSchema: buildRunSimulatorSchema as unknown as z.ZodType<BuildRunSimulatorParams>,
-    logicFunction: build_run_simLogic,
-    getExecutor: getDefaultCommandExecutor,
-    requirements: [
-      { allOf: ['scheme'], message: 'scheme is required' },
-      { oneOf: ['projectPath', 'workspacePath'], message: 'Provide a project or workspace' },
-      { oneOf: ['simulatorId', 'simulatorName'], message: 'Provide simulatorId or simulatorName' },
-    ],
-    exclusivePairs: [
-      ['projectPath', 'workspacePath'],
-      ['simulatorId', 'simulatorName'],
-    ],
-  }),
+    buildRunSimulatorSchema as unknown as z.ZodType<BuildRunSimulatorParams>,
+    build_run_simLogic,
+    getDefaultCommandExecutor,
+  ),
 };

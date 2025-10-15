@@ -545,8 +545,9 @@ describe('build_run_sim tool', () => {
         simulatorName: 'iPhone 16',
       });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Missing required session defaults');
-      expect(result.content[0].text).toContain('Provide a project or workspace');
+      expect(result.content[0].text).toContain('Parameter validation failed');
+      expect(result.content[0].text).toContain('projectPath');
+      expect(result.content[0].text).toContain('workspacePath');
     });
 
     it('should error when both projectPath and workspacePath provided', async () => {
@@ -558,7 +559,7 @@ describe('build_run_sim tool', () => {
       });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Parameter validation failed');
-      expect(result.content[0].text).toContain('Mutually exclusive parameters provided');
+      expect(result.content[0].text).toContain('mutually exclusive');
       expect(result.content[0].text).toContain('projectPath');
       expect(result.content[0].text).toContain('workspacePath');
     });

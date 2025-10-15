@@ -56,8 +56,9 @@ describe('test_sim tool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Missing required session defaults');
-      expect(result.content[0].text).toContain('Provide a project or workspace');
+      expect(result.content[0].text).toContain('Parameter validation failed');
+      expect(result.content[0].text).toContain('projectPath');
+      expect(result.content[0].text).toContain('workspacePath');
     });
 
     it('should handle both projectPath and workspacePath provided', async () => {
@@ -70,7 +71,7 @@ describe('test_sim tool', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Parameter validation failed');
-      expect(result.content[0].text).toContain('Mutually exclusive parameters provided');
+      expect(result.content[0].text).toContain('mutually exclusive');
       expect(result.content[0].text).toContain('projectPath');
       expect(result.content[0].text).toContain('workspacePath');
     });
@@ -82,22 +83,34 @@ describe('test_sim tool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Missing required session defaults');
-      expect(result.content[0].text).toContain('scheme is required');
+      expect(result.content[0].text).toContain('Parameter validation failed');
+      expect(result.content[0].text).toContain('scheme');
     });
 
     it('should handle missing both simulatorId and simulatorName', async () => {
-      const result = await testSim.handler({
-        workspacePath: '/path/to/workspace.xcworkspace',
-        scheme: 'MyScheme',
+      // Create a mock executor that simulates error (test will fail before execution anyway)
+      const mockExecutor = createMockExecutor({
+        success: false,
+        error: 'Should not reach here',
       });
 
+      const result = await test_simLogic(
+        {
+          workspacePath: '/path/to/workspace.xcworkspace',
+          scheme: 'MyScheme',
+          // Missing both simulatorId and simulatorName - will fail at validation
+        } as any,
+        mockExecutor,
+      );
+
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Missing required session defaults');
-      expect(result.content[0].text).toContain('Provide simulatorId or simulatorName');
+      expect(result.content[0].text).toContain('simulatorId');
+      expect(result.content[0].text).toContain('simulatorName');
     });
 
     it('should handle both simulatorId and simulatorName provided', async () => {
+      // This is caught by Zod validation at the handler level
+      // Test it through the handler to verify Zod refine() works
       const result = await testSim.handler({
         workspacePath: '/path/to/workspace.xcworkspace',
         scheme: 'MyScheme',
@@ -107,7 +120,7 @@ describe('test_sim tool', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Parameter validation failed');
-      expect(result.content[0].text).toContain('Mutually exclusive parameters provided');
+      expect(result.content[0].text).toContain('mutually exclusive');
       expect(result.content[0].text).toContain('simulatorId');
       expect(result.content[0].text).toContain('simulatorName');
     });
@@ -389,7 +402,7 @@ describe('test_sim tool', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Mutually exclusive');
+      expect(result.content[0].text).toContain('mutually exclusive');
     });
 
     it('should still reject macOS platform', async () => {

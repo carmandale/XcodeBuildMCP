@@ -106,20 +106,11 @@ export default {
   name: 'build_sim',
   description: 'Builds an app for a simulator.',
   schema: publicSchemaObject.shape, // MCP SDK compatibility (public inputs only)
-  handler: createSessionAwareTool<BuildSimulatorParams>({
+  handler: createSessionAwareTool<BuildSimulatorParams>(
     // Type assertion required: Zod's .refine() changes the schema type signature,
     // but the validated output type is still BuildSimulatorParams
-    internalSchema: buildSimulatorSchema as unknown as z.ZodType<BuildSimulatorParams>,
-    logicFunction: build_simLogic,
-    getExecutor: getDefaultCommandExecutor,
-    requirements: [
-      { allOf: ['scheme'], message: 'scheme is required' },
-      { oneOf: ['projectPath', 'workspacePath'], message: 'Provide a project or workspace' },
-      { oneOf: ['simulatorId', 'simulatorName'], message: 'Provide simulatorId or simulatorName' },
-    ],
-    exclusivePairs: [
-      ['projectPath', 'workspacePath'],
-      ['simulatorId', 'simulatorName'],
-    ],
-  }),
+    buildSimulatorSchema as unknown as z.ZodType<BuildSimulatorParams>,
+    build_simLogic,
+    getDefaultCommandExecutor,
+  ),
 };

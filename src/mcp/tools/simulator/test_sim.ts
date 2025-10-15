@@ -79,6 +79,9 @@ const testSimulatorSchema = baseSchema
   .refine((val) => !(val.projectPath !== undefined && val.workspacePath !== undefined), {
     message: 'projectPath and workspacePath are mutually exclusive. Provide only one.',
   })
+  .refine((val) => !(val.simulatorId !== undefined && val.simulatorName !== undefined), {
+    message: 'simulatorId and simulatorName are mutually exclusive. Provide only one.',
+  })
   .refine((val) => val.platform !== 'macOS', {
     message:
       'macOS platform is not supported by test_sim. Use test_macos tool instead for macOS projects.',
@@ -133,20 +136,11 @@ Example with session defaults:
 1. Set defaults once: session-set-defaults({ projectPath: "/path/to/MyProject.xcodeproj", scheme: "MyScheme" })
 2. Then call with minimal params: test_sim({ simulatorName: "iPhone 16" })`,
   schema: baseSchemaObject.shape, // MCP SDK compatibility
-  handler: createSessionAwareTool<TestSimulatorParams>({
+  handler: createSessionAwareTool<TestSimulatorParams>(
     // Type assertion required: Zod's .refine() changes the schema type signature,
     // but the validated output type is still TestSimulatorParams
-    internalSchema: testSimulatorSchema as unknown as z.ZodType<TestSimulatorParams>,
-    logicFunction: test_simLogic,
-    getExecutor: getDefaultCommandExecutor,
-    requirements: [
-      { allOf: ['scheme'], message: 'scheme is required' },
-      { oneOf: ['projectPath', 'workspacePath'], message: 'Provide a project or workspace' },
-      { oneOf: ['simulatorId', 'simulatorName'], message: 'Provide simulatorId or simulatorName' },
-    ],
-    exclusivePairs: [
-      ['projectPath', 'workspacePath'],
-      ['simulatorId', 'simulatorName'],
-    ],
-  }),
+    testSimulatorSchema as unknown as z.ZodType<TestSimulatorParams>,
+    test_simLogic,
+    getDefaultCommandExecutor,
+  ),
 };
